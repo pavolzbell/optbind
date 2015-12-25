@@ -4,16 +4,25 @@ require 'optparse'
 class OptionBinder
   attr_reader :parser, :target
 
-  def initialize(parser: nil, target: TOPLEVEL_BINDING, locals: false)
+  def initialize(parser: nil, target: nil, bind: nil)
+    target, bind = TOPLEVEL_BINDING, :to_local_variables if target == nil && bind == nil
     @parser = resolve_parser(parser)
-    @target, @reader, @writer = target, resolve_binding(target, locals)
+    @target, @reader, @writer = target, *resolve_binding(target, bind)
+    yield self if block_given?
   end
 
-  def resolve_binding(target, locals = false)
+  def resolve_binding(target, bind)
+    if bind == :to_local_variables
+      raise ArgumentError unless target.is_a? Binding
+      return -> (v) { target.local_variable_get v }, -> (v, x) { target.local_variable_set v, x }
+    end
+
+    if bind == :to_instance_variables
+      return -> (v) { target.instance_variable_get "@#{v}" }, -> (v, x) { target.instance_variable_set "@#{v}", x }
+    end
+
     return -> (v) { target[v] }, -> (v, x) { target[v] = x } if target.respond_to? :[]
-    return -> (v) { target.public_send v }, -> (v, x) { target.public_send v, x } unless target.is_a? Binding
-    return -> (v) { target.local_variable_get v }, -> (v, x) { target.local_variable_set v, x } if locals
-    return -> (v) { target.instance_variable_get v }, -> (v, x) { target.instance_variable_set v, x }
+    return -> (v) { target.public_send v }, -> (v, x) { target.public_send "#{v}=", x }
   end
 
   def resolve_parser(parser = nil)
@@ -32,12 +41,12 @@ class OptionBinder
   def_delegators :@parser, :load
 
   def parse(*argv)
-    super
+    @parser.parse *argv
     parse_args *argv
   end
 
   def parse!(*argv)
-    super
+    @parser.parse! *argv
     parse_args! *argv
   end
 
@@ -68,18 +77,21 @@ class OptionBinder
       case opts[0]
       when Hash then
         hash, variable = opts[0], [hash.delete(:variable), hash.delete(:bind)].compact[0]
-        bound, default = !!variable, hash.delete(:default) || (@reader.call(bound) if bound)
+        bound, default = !!variable, hash.delete(:default) || (@reader.call(variable.to_sym) if variable)
         opts, handler = Switch.parser_opts_from_hash hash, &handler
       when String then
-        string, variable = opts[0] =~ /\A-/ ? opts[0].split(/\s+/, 2).reverse : opts[0], nil
-        bound, default = !!variable, (@reader.call(bound) if bound)
+        string, variable = *(opts[0] !~ /\A\s*-/ ? opts[0].split(/\s+/, 2).reverse : [opts[0], nil])
+        bound, default = !!variable, (@reader.call(variable.to_sym) if variable)
         opts, handler = Switch.parser_opts_from_string string, &handler
       end
     end
 
-    (@bound_variables_with_defaults ||= {})[variable] = default if bound
+    if bound
+      variable = variable.to_sym
+      (@bound_variables_with_defaults ||= {})[variable] = default
+    end
 
-    @parser.on(opts) do |r|
+    @parser.on(*opts) do |r|
       unless opts.include? :OPTIONAL
         a = opts.select { |o| o =~ /\A-/ }.sort_by { |o| o.length }[-1]
         @parser.abort "missing argument: #{a}=" if !r || (r.respond_to?(:empty?) && r.empty?)
@@ -111,6 +123,7 @@ class OptionBinder
   end
 
   def default?(v)
+    v = v.to_sym
     return nil unless (@bound_variables_with_defaults || {}).has_key? v
     @bound_variables_with_defaults[v] == @reader.call(v)
   end
@@ -188,8 +201,9 @@ class OptionBinder
 
   #TODO
   module Arguable
-    def define_and_bind(to: TOPLEVEL_BINDING, locals: false)
-      @optbind = OptionBinder.new parser: nil, target: to, locals: locals
+    def define_and_bind(to: :locals)
+      @optbind = OptionBinder.new parser: nil, target: TOPLEVEL_BINDING, bind: :to_local_variables if to == :locals
+
       self.options = @optbind.parser
       yield @optbind if block_given?
       @optbind

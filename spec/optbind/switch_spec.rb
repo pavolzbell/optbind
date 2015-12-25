@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe OptBind::Switch do
-  describe '#parser_opts_from_hash' do
+  describe '.parser_opts_from_hash' do
     context 'with no arguments' do
       it 'returns nothing' do
         expect(subject.parser_opts_from_hash).to contain_exactly [], nil
@@ -155,7 +155,7 @@ describe OptBind::Switch do
     end
   end
 
-  describe '#parser_opts_from_string' do
+  describe '.parser_opts_from_string' do
     context 'with no arguments' do
       it 'returns nothing' do
         expect(subject.parser_opts_from_string).to contain_exactly [], nil
