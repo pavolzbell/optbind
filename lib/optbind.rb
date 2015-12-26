@@ -39,16 +39,34 @@ class OptionBinder
   def_delegators :@parser, :abort, :warn
   def_delegators :@parser, :load
 
-  def parse(*argv)
-    @parser.parse *argv
-    parse_args *argv
-    argv
+  def order(*argv, &blk)
+    @parser.order *argv, &blk
+    parse_args argv
   end
 
-  def parse!(*argv)
-    @parser.parse! *argv
-    parse_args! *argv
-    argv
+  def order!(argv)
+    @parser.order! argv
+    parse_args argv
+  end
+
+  def permute(*argv)
+    @parser.permute *argv
+    parse_args argv
+  end
+
+  def permute!(argv)
+    @parser.permute! argv
+    parse_args argv
+  end
+
+  def parse(*argv)
+    @parser.parse *argv
+    parse_args argv
+  end
+
+  def parse!(argv)
+    @parser.parse! argv
+    parse_args! argv
   end
 
   def_delegators :@parser, :to_a, :to_s
@@ -72,25 +90,7 @@ class OptionBinder
   alias_method :use, :usage
 
   def option(*opts, &handler)
-    bound = false
-
-    if opts.size == 1
-      case opts[0]
-      when Hash then
-        hash, variable = opts[0], [hash.delete(:variable), hash.delete(:bind)].compact[0]
-        bound, default = !!variable, hash.delete(:default) || (@reader.call(variable.to_sym) if variable)
-        opts, handler = Switch.parser_opts_from_hash hash, &handler
-      when String then
-        string, variable = *(opts[0] !~ /\A\s*-/ ? opts[0].split(/\s+/, 2).reverse : [opts[0], nil])
-        bound, default = !!variable, (@reader.call(variable.to_sym) if variable)
-        opts, handler = Switch.parser_opts_from_string string, &handler
-      end
-    end
-
-    if bound
-      variable = variable.to_sym
-      (@bound_variables_with_defaults ||= {})[variable] = default
-    end
+    opts, handler, bound, variable, default = *several_variants(*opts, &handler)
 
     @parser.on(*opts) do |r|
       unless opts.include? :OPTIONAL
@@ -101,14 +101,21 @@ class OptionBinder
       (handler || -> (_) { r }).call(r == nil ? default : r).tap { |x| @writer.call variable, x if bound }
     end
 
+    (@bound_variables_with_defaults ||= {})[variable] = default if bound
     self
   end
 
   alias_method :opt, :option
 
-  #TODO
-  def argument(*args, &handler)
+  def argument(*opts, &handler)
+    opts, handler, bound, variable, default = *several_variants(*opts, &handler)
 
+    opts.each do |opt|
+      (opts << :MULTIPLE) and break if opt.to_s =~ /<\S+>\.{3}/
+    end
+
+    (@argument_definitions ||= []) << { opts: opts, handler: handler, bound: bound, variable: variable }
+    (@bound_variables_with_defaults ||= {})[variable] = default if bound
     self
   end
 
@@ -151,7 +158,6 @@ class OptionBinder
       argument = (hash[:argument].to_s if hash[:argument])
       description = ([hash[:description]].flatten * ' ' if hash[:description])
       handler ||= hash[:handler]
-
       return ([style, pattern, values] + names + [argument, description]).compact, handler
     end
 
@@ -164,7 +170,7 @@ class OptionBinder
 
       style, pattern, values, argument = nil
 
-      while string.sub!(/\A(?:(?<long>--[\[\]\-\w]+[\]\w]+)?(?:(?<argument>\[?=[<(]\S+[)>]\]?)|\s+))/, '')
+      while string.sub!(/\A(?:(?<long>--[\[\]\-\w]+[\]\w]+)?(?:(?<argument>\[?=[<(]\S+[)>]\.{,3}\]?)|\s+))/, '')
         longs << $~[:long]
         argument = $~[:argument]
 
@@ -181,48 +187,99 @@ class OptionBinder
       end
 
       description = !string.empty? ? string.strip : nil
-
       return ([style, pattern, values] + shorts + longs + [argument, description]).compact, handler
     end
   end
 
-  #TODO
-  def parse_args(*argv)
+  def several_variants(*opts, &handler)
+    bound, variable, default = false, nil, nil
 
+    if opts.size == 1
+      case opts[0]
+      when Hash
+        hash, variable = opts[0], [hash.delete(:variable), hash.delete(:bind)].compact[0]
+        bound = !(opts[:bound] === false) && !!variable
+        default = hash.delete(:default) || (@reader.call(variable.to_sym) if variable)
+        opts, handler = Switch.parser_opts_from_hash hash, &handler
+      when String
+        string, variable = *(opts[0] !~ /\A\s*-/ ? opts[0].split(/\s+/, 2).reverse : [opts[0], nil])
+        bound, default = !!variable, (@reader.call(variable.to_sym) if variable)
+        opts, handler = Switch.parser_opts_from_string string, &handler
+      end
+    end
+
+    variable = variable.to_sym if variable
+    return opts, handler, bound, variable, default
   end
 
-  private :parse_args
+  private :several_variants
 
-  #TODO
-  def parse_args!(*argv)
-
+  def parse_args(argv)
+    parse_args! argv.dup
   end
 
-  private :parse_args!
+  def parse_args!(argv)
+    return argv unless @argument_definitions
+    @argument_definitions.each do |a|
+      default = (@bound_variables_with_defaults ||= {})[a[:variable]]
+      r = argv[0] ? argv.shift : default
+      r = ([r] + argv.shift(argv.size)) if a[:opts].include? :MULTIPLE
+      @parser.abort 'missing arguments' if r.nil? && args[:opts].include?(:REQUIRED)
+      (a[:handler] || -> (_) { r }).call(r == nil ? default : r).tap { |x| @writer.call a[:variable], x if a[:bound] }
+      return argv if a[:opts].include? :MULTIPLE
+    end
+    @parser.abort 'too many arguments' if argv[0]
+    argv
+  end
+
+  private :parse_args, :parse_args!
 
   module Arguable
-    def define_and_bind(opts = {}, &block)
-      if opts[:to] == :locals
-        target, bind = TOPLEVEL_BINDING, :to_local_variables
-      else
-        target = opts[:target] || opts[:to]
-        bind = (:to_local_variables if opts[:locals]) || opts[:bind] || ("to_#{opts[:via]}".to_sym if opts[:via])
+    def binder=(bind)
+      unless @optbind = bind
+        class << self
+          undef_method(:binder)
+          undef_method(:binder=)
+        end
+      end
+    end
+
+    def binder(opts = {})
+      unless @optbind
+        if opts[:to] == :locals
+          target, bind = TOPLEVEL_BINDING, :to_local_variables
+        else
+          target = opts[:target] || opts[:to]
+          bind = (:to_local_variables if opts[:locals]) || opts[:bind] || ("to_#{opts[:via]}".to_sym if opts[:via])
+        end
+
+        @optbind = OptionBinder.new parser: opts[:parser], target: target, bind: bind
       end
 
-      @optbind = OptionBinder.new parser: opts[:parser], target: target, bind: bind, &block
+      # TODO enable "opt" in block also, do not force just "o.opt"
+      @optbind.instance_eval { yield self } if block_given?
       self.options = @optbind.parser
       @optbind
     end
 
-    alias_method :define, :define_and_bind
-    alias_method :bind, :define_and_bind
-
-    def binder
-      @optbind
-    end
+    alias_method :define, :binder
+    alias_method :define_and_bind, :binder
+    alias_method :bind, :binder
 
     def parser
       self.options
+    end
+
+    def order!(&blk)
+      binder.order! self, &blk
+    end
+
+    def permute!
+      binder.permute! self
+    end
+
+    def parse!
+      binder.parse! self
     end
   end
 end

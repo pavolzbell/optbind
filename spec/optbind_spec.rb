@@ -40,7 +40,7 @@ describe OptBind do
     context 'bound via #[]' do
       include_examples 'create_and_bind' do
         let(:target) do
-          { o: STDOUT }
+          { o: :STDOUT }
         end
 
         let(:bind) do
@@ -56,7 +56,7 @@ describe OptBind do
             attr_accessor :o
           end
 
-          Target.new.tap { |t| t.o = STDOUT }
+          Target.new.tap { |t| t.o = :STDOUT }
         end
 
         let(:bind) do
@@ -70,7 +70,7 @@ describe OptBind do
         let(:target) do
           class Target
             def initialize
-              @o = STDOUT
+              @o = :STDOUT
             end
           end
 
@@ -85,7 +85,7 @@ describe OptBind do
 
     context 'bound via #local_variables' do
       include_examples 'create_and_bind' do
-        o = STDOUT
+        o = :STDOUT
 
         target = self.instance_eval { binding }
 
@@ -103,10 +103,10 @@ describe OptBind do
   describe 'accessing a bound option' do
     shared_examples_for 'read_and_write' do
       it 'reads and writes' do
-        expect(options.bound_defaults).to eq(o: STDOUT)
-        expect(options.bound_variables).to eq(o: STDOUT)
+        expect(options.bound_defaults).to eq(o: :STDOUT)
+        expect(options.bound_variables).to eq(o: :STDOUT)
         writer.call(:o, STDERR)
-        expect(options.bound_defaults).to eq(o: STDOUT)
+        expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: STDERR)
       end
     end
@@ -120,7 +120,7 @@ describe OptBind do
     context 'bound via #[]' do
       include_examples 'read_and_write' do
         let(:target) do
-          { o: STDOUT }
+          { o: :STDOUT }
         end
 
         let(:bind) do
@@ -140,7 +140,7 @@ describe OptBind do
             attr_accessor :o
           end
 
-          Target.new.tap { |t| t.o = STDOUT }
+          Target.new.tap { |t| t.o = :STDOUT }
         end
 
         let(:bind) do
@@ -158,7 +158,7 @@ describe OptBind do
         let(:target) do
           class Target
             def initialize
-              @o = STDOUT
+              @o = :STDOUT
             end
           end
 
@@ -178,7 +178,7 @@ describe OptBind do
     context 'bound via #local_variables' do
       include_examples 'read_and_write' do
         let(:target) do
-          o = STDOUT
+          o = :STDOUT
           target = self.instance_eval { binding }
         end
 
@@ -196,10 +196,10 @@ describe OptBind do
   describe 'parsing a bound option' do
     shared_examples_for 'parse' do
       it 'parses' do
-        expect(options.bound_defaults).to eq(o: STDOUT)
-        expect(options.bound_variables).to eq(o: STDOUT)
+        expect(options.bound_defaults).to eq(o: :STDOUT)
+        expect(options.bound_variables).to eq(o: :STDOUT)
         expect(options.parse('--output=file.out')).to contain_exactly('--output=file.out')
-        expect(options.bound_defaults).to eq(o: STDOUT)
+        expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: 'file.out')
       end
     end
@@ -213,7 +213,7 @@ describe OptBind do
     context 'bound via #[]' do
       include_examples 'parse' do
         let(:target) do
-          { o: STDOUT }
+          { o: :STDOUT }
         end
 
         let(:bind) do
@@ -229,7 +229,7 @@ describe OptBind do
             attr_accessor :o
           end
 
-          Target.new.tap { |t| t.o = STDOUT }
+          Target.new.tap { |t| t.o = :STDOUT }
         end
 
         let(:bind) do
@@ -243,7 +243,7 @@ describe OptBind do
         let(:target) do
           class Target
             def initialize
-              @o = STDOUT
+              @o = :STDOUT
             end
           end
 
@@ -259,7 +259,7 @@ describe OptBind do
     context 'bound via #local_variables' do
       include_examples 'parse' do
         let(:target) do
-          o = STDOUT
+          o = :STDOUT
           target = self.instance_eval { binding }
         end
 
