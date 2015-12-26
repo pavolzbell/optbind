@@ -25,7 +25,82 @@ describe OptBind do
     end
   end
 
-  describe 'access to variables' do
+  describe 'creating a binder and binding an option' do
+    shared_examples_for 'create_and_bind' do
+      it 'creates and binds' do
+        options = OptBind.new(target: target, bind: bind)
+        expect(options.bound_defaults.key? :o).to be false
+        expect(options.bound_variables.key? :o).to be false
+        expect(options.opt 'o --output').to equal options
+        expect(options.bound_defaults.key? :o).to be true
+        expect(options.bound_variables.key? :o).to be true
+      end
+    end
+
+    context 'bound via #[]' do
+      include_examples 'create_and_bind' do
+        let(:target) do
+          { o: STDOUT }
+        end
+
+        let(:bind) do
+          nil
+        end
+      end
+    end
+
+    context 'bound via #public_send' do
+      include_examples 'create_and_bind' do
+        let(:target) do
+          class Target
+            attr_accessor :o
+          end
+
+          Target.new.tap { |t| t.o = STDOUT }
+        end
+
+        let(:bind) do
+          false
+        end
+      end
+    end
+
+    context 'bound via #instance_variables' do
+      include_examples 'create_and_bind' do
+        let(:target) do
+          class Target
+            def initialize
+              @o = STDOUT
+            end
+          end
+
+          Target.new
+        end
+
+        let(:bind) do
+          :to_instance_variables
+        end
+      end
+    end
+
+    context 'bound via #local_variables' do
+      include_examples 'create_and_bind' do
+        o = STDOUT
+
+        target = self.instance_eval { binding }
+
+        let(:target) do
+          target
+        end
+
+        let(:bind) do
+          :to_local_variables
+        end
+      end
+    end
+  end
+
+  describe 'accessing a bound option' do
     shared_examples_for 'read_and_write' do
       it 'reads and writes' do
         expect(options.bound_defaults).to eq(o: STDOUT)
@@ -78,7 +153,7 @@ describe OptBind do
       end
     end
 
-    context 'bound via #instance_variable_*' do
+    context 'bound via #instance_variables' do
       include_examples 'read_and_write' do
         let(:target) do
           class Target
@@ -100,14 +175,11 @@ describe OptBind do
       end
     end
 
-    context 'bound via #local_variable_*' do
+    context 'bound via #local_variables' do
       include_examples 'read_and_write' do
-        o = STDOUT
-
-        target = self.instance_eval { binding }
-
         let(:target) do
-          target
+          o = STDOUT
+          target = self.instance_eval { binding }
         end
 
         let(:bind) do
@@ -121,19 +193,15 @@ describe OptBind do
     end
   end
 
-  describe 'parsing with target' do
-    shared_examples_for 'bind_and_parse' do
-      it 'binds and parses' do
+  describe 'parsing a bound option' do
+    shared_examples_for 'parse' do
+      it 'parses' do
         expect(options.bound_defaults).to eq(o: STDOUT)
         expect(options.bound_variables).to eq(o: STDOUT)
-        options.parse(*argv)
+        expect(options.parse('--output=file.out')).to contain_exactly('--output=file.out')
         expect(options.bound_defaults).to eq(o: STDOUT)
         expect(options.bound_variables).to eq(o: 'file.out')
       end
-    end
-
-    let(:argv) do
-      %w(--output=file.out)
     end
 
     let(:options) do
@@ -143,7 +211,7 @@ describe OptBind do
     end
 
     context 'bound via #[]' do
-      include_examples 'bind_and_parse' do
+      include_examples 'parse' do
         let(:target) do
           { o: STDOUT }
         end
@@ -155,7 +223,7 @@ describe OptBind do
     end
 
     context 'bound via #public_send' do
-      include_examples 'bind_and_parse' do
+      include_examples 'parse' do
         let(:target) do
           class Target
             attr_accessor :o
@@ -170,8 +238,8 @@ describe OptBind do
       end
     end
 
-    context 'bound via #instance_variable_*' do
-      include_examples 'bind_and_parse' do
+    context 'bound via #instance_variables' do
+      include_examples 'parse' do
         let(:target) do
           class Target
             def initialize
@@ -188,14 +256,11 @@ describe OptBind do
       end
     end
 
-    context 'bound via #local_variable_*' do
-      include_examples 'bind_and_parse' do
-        o = STDOUT
-
-        target = self.instance_eval { binding }
-
+    context 'bound via #local_variables' do
+      include_examples 'parse' do
         let(:target) do
-          target
+          o = STDOUT
+          target = self.instance_eval { binding }
         end
 
         let(:bind) do

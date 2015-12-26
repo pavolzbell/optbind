@@ -12,17 +12,16 @@ class OptionBinder
   end
 
   def resolve_binding(target, bind)
-    if bind == :to_local_variables
+    case bind
+    when :to_local_variables
       raise ArgumentError unless target.is_a? Binding
       return -> (v) { target.local_variable_get v }, -> (v, x) { target.local_variable_set v, x }
-    end
-
-    if bind == :to_instance_variables
+    when :to_instance_variables
       return -> (v) { target.instance_variable_get "@#{v}" }, -> (v, x) { target.instance_variable_set "@#{v}", x }
+    else
+      return -> (v) { target[v] }, -> (v, x) { target[v] = x } if target.respond_to? :[]
+      return -> (v) { target.public_send v }, -> (v, x) { target.public_send "#{v}=", x }
     end
-
-    return -> (v) { target[v] }, -> (v, x) { target[v] = x } if target.respond_to? :[]
-    return -> (v) { target.public_send v }, -> (v, x) { target.public_send "#{v}=", x }
   end
 
   def resolve_parser(parser = nil)
@@ -43,11 +42,13 @@ class OptionBinder
   def parse(*argv)
     @parser.parse *argv
     parse_args *argv
+    argv
   end
 
   def parse!(*argv)
     @parser.parse! *argv
     parse_args! *argv
+    argv
   end
 
   def_delegators :@parser, :to_a, :to_s
@@ -199,14 +200,29 @@ class OptionBinder
 
   private :parse_args!
 
-  #TODO
   module Arguable
-    def define_and_bind(to: :locals)
-      @optbind = OptionBinder.new parser: nil, target: TOPLEVEL_BINDING, bind: :to_local_variables if to == :locals
+    def define_and_bind(opts = {}, &block)
+      if opts[:to] == :locals
+        target, bind = TOPLEVEL_BINDING, :to_local_variables
+      else
+        target = opts[:target] || opts[:to]
+        bind = (:to_local_variables if opts[:locals]) || opts[:bind] || ("to_#{opts[:via]}".to_sym if opts[:via])
+      end
 
+      @optbind = OptionBinder.new parser: opts[:parser], target: target, bind: bind, &block
       self.options = @optbind.parser
-      yield @optbind if block_given?
       @optbind
+    end
+
+    alias_method :define, :define_and_bind
+    alias_method :bind, :define_and_bind
+
+    def binder
+      @optbind
+    end
+
+    def parser
+      self.options
     end
   end
 end
