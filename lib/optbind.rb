@@ -244,7 +244,7 @@ class OptionBinder
       end
     end
 
-    def binder(opts = {})
+    def binder(opts = {}, &blk)
       unless @optbind
         if opts[:to] == :locals
           target, bind = TOPLEVEL_BINDING, :to_local_variables
@@ -256,8 +256,7 @@ class OptionBinder
         @optbind = OptionBinder.new parser: opts[:parser], target: target, bind: bind
       end
 
-      # TODO enable "opt" in block also, do not force just "o.opt"
-      @optbind.instance_eval { yield self } if block_given?
+      @optbind.instance_eval &blk if blk
       self.options = @optbind.parser
       @optbind
     end
@@ -265,6 +264,13 @@ class OptionBinder
     alias_method :define, :binder
     alias_method :define_and_bind, :binder
     alias_method :bind, :binder
+
+    def define_and_parse!(opts = {}, &blk)
+      define opts, &blk
+      parse!
+    end
+
+    alias_method :bind_and_parse!, :define_and_parse!
 
     def parser
       self.options

@@ -25,20 +25,53 @@ describe OptBind::Arguable do
     expect(argv.options).to be_an_instance_of OptionParser
   end
 
+  let (:already_parsed) { false }
+
+  shared_examples_for 'define_bound_option_and_argument' do |define|
+    it 'defines bound option and argument' do
+      define.call argv
+      expect(argv.binder).to be_an_instance_of OptionBinder
+      expect(argv.binder.bound_variables.keys).to contain_exactly(:o, :i)
+    end
+  end
+
   shared_examples_for 'parse_bound_option_and_argument' do
-    it 'parses bound option' do
-      expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
-      expect(argv.binder.bound_variables).to eq(o: :STDOUT, i: :STDIN)
-      expect(argv.parse!).to eq []
+    it 'parses bound option and argument' do
+      unless already_parsed
+        expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
+        expect(argv.binder.bound_variables).to eq(o: :STDOUT, i: :STDIN)
+        expect(argv.parse!).to eq []
+      end
+
       expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
       expect(argv.binder.bound_variables).to eq(o: 'file.out', i: 'file.in')
       expect(argv).to eq []
     end
   end
 
-  shared_examples_for 'define' do
+  shared_examples_for 'define_variants' do |method = :define|
+    context 'with block' do
+      include_examples 'define_bound_option_and_argument', -> (argv) do
+        argv.public_send method, target: { o: nil, i: nil } do
+          opt 'o --output=<file>'
+          arg 'i <file>'
+        end
+      end
+    end
+
+    context 'with block via variable' do
+      include_examples 'define_bound_option_and_argument', -> (argv) do
+        argv.public_send method, target: { o: nil, i: nil } do |o|
+          o.opt 'o --output=<file>'
+          o.arg 'i <file>'
+        end
+      end
+    end
+  end
+
+  shared_examples_for 'define_with_target' do |method = :define|
     before(:each) do
-      argv.define opts do |o|
+      argv.public_send method, opts do |o|
         o.opt 'o --output=<file>'
         o.arg 'i <file>'
       end
@@ -140,9 +173,37 @@ describe OptBind::Arguable do
     end
   end
 
-  shared_examples_for 'bind' do
+  shared_examples_for 'bind_variants' do |method = :bind|
+    context 'with block' do
+      include_examples 'define_bound_option_and_argument', -> (argv) do
+        argv.public_send method, to: { o: nil, i: nil } do
+          opt 'o --output=<file>'
+          arg 'i <file>'
+        end
+      end
+    end
+
+    context 'with block via variable' do
+      include_examples 'define_bound_option_and_argument', -> (argv) do
+        argv.public_send method, to: { o: nil, i: nil } do |o|
+          o.opt 'o --output=<file>'
+          o.arg 'i <file>'
+        end
+      end
+    end
+
+    context 'without block' do
+      include_examples 'define_bound_option_and_argument', -> (argv) do
+        argv.public_send method, to: { o: nil, i: nil }
+        argv.binder.opt 'o --output=<file>'
+        argv.binder.arg 'i <file>'
+      end
+    end
+  end
+
+  shared_examples_for 'bind_to_target' do |method = :bind|
     before(:each) do
-      argv.bind opts do |o|
+      argv.public_send method, opts do |o|
         o.opt 'o --output=<file>'
         o.arg 'i <file>'
       end
@@ -244,7 +305,7 @@ describe OptBind::Arguable do
     end
   end
 
-  shared_examples_for 'bind_to_locals' do
+  shared_examples_for 'bind_to_locals' do |method = :bind|
     before(:each) do
       @toplevel_binding = TOPLEVEL_BINDING
       @verbose, $VERBOSE = $VERBOSE, nil
@@ -252,7 +313,7 @@ describe OptBind::Arguable do
       o, i = :STDOUT, :STDIN
       TOPLEVEL_BINDING = self.instance_eval { binding }
 
-      argv.bind opts do |o|
+      argv.public_send method, opts do |o|
         o.opt 'o --output=<file>'
         o.arg 'i <file>'
       end
@@ -273,11 +334,19 @@ describe OptBind::Arguable do
   end
 
   describe '#define' do
-    include_examples 'define'
+    include_examples 'define_variants'
+  end
+
+  describe '#define' do
+    include_examples 'define_with_target'
   end
 
   describe '#bind' do
-    include_examples 'bind'
+    include_examples 'bind_variants'
+  end
+
+  describe '#bind' do
+    include_examples 'bind_to_target'
   end
 
   describe '#bind' do
@@ -285,14 +354,28 @@ describe OptBind::Arguable do
   end
 
   describe '#define_and_bind' do
-    include_examples 'define'
+    include_examples 'bind_variants', :define_and_bind
   end
 
   describe '#define_and_bind' do
-    include_examples 'bind'
+    include_examples 'define_with_target', :define_and_bind
   end
 
   describe '#define_and_bind' do
-    include_examples 'bind_to_locals'
+    include_examples 'bind_to_target', :define_and_bind
+  end
+
+  describe '#define_and_bind' do
+    include_examples 'bind_to_locals', :define_and_bind
+  end
+
+  describe '#define_and_parse!' do
+    include_examples 'define_variants', :define_and_parse!
+  end
+
+  describe '#define_and_parse!' do
+    let (:already_parsed) { true }
+
+    include_examples 'define_with_target', :define_and_parse!
   end
 end
