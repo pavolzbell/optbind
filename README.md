@@ -5,7 +5,7 @@
 
 Binds command-line options to variables.
 
-Extends command-line option analysis by wrapping an instance of standard [`OptionsParser`](http://ruby-doc.org/stdlib-2.2.3/libdoc/optparse/rdoc/OptionParser.html).
+Extends command-line option analysis by wrapping an instance of standard [`OptionParser`](http://ruby-doc.org/stdlib-2.2.3/libdoc/optparse/rdoc/OptionParser.html).
 Enables binding of options and arguments to instance or local variables. Provides `Hash` and `String` only interfaces
 to define command line options, unlike a mixed interface by standard library. Supports access to default values and
 partial argument analysis. Builds Git-like options and help by default. 
