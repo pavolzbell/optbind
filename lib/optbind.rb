@@ -26,8 +26,9 @@ class OptionBinder
 
   def resolve_parser(parser = nil)
     parser || OptionParser.new do |p|
-      p.on_tail '-h', '--help' #TODO { abort to_s }
-      p.on_tail '--version'
+      p.define_singleton_method(:banner) { (b = super()) !~ /\AU/ ? b : "usage: #{program_name}\n\n" }
+      p.define_singleton_method(:version) { super() || (defined?(::VERSION) && ::VERSION) }
+      p.define_singleton_method(:help) { super() << "    -h, --help\n        --version\n\n" }
     end
   end
 
@@ -73,13 +74,14 @@ class OptionBinder
 
   def_delegator :@parser, :program_name, :program
   def_delegator :@parser, :version
+  def_delegator :@parser, :help
 
   def usage(*args)
     line = (args * ' ') << "\n"
 
-    if @parser.banner.nil?
-      @parser.on_head "\n" and @parser.on_tail "\n"
-      @parser.banner << "usage: #{program} " << line
+    if @parser.banner =~ /\Ausage:.+\n\n/i
+      @parser.banner = "usage: #{program} " << line
+      @parser.separator "\n"
     else
       @parser.banner << "   or: #{program} " << line
     end
