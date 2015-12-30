@@ -174,6 +174,10 @@ describe OptBind::Arguable do
   end
 
   shared_examples_for 'bind_variants' do |method = :bind|
+    if method.to_s =~ /_?parse[_!]?/
+      raise "Unable to call #{method} without block, variables must be bound before parsing"
+    end
+
     context 'with block' do
       include_examples 'define_bound_option_and_argument', -> (argv) do
         argv.public_send method, to: { o: nil, i: nil } do
@@ -377,5 +381,21 @@ describe OptBind::Arguable do
     let (:already_parsed) { true }
 
     include_examples 'define_with_target', :define_and_parse!
+  end
+
+  describe '#bind_and_parse!' do
+    include_examples 'define_variants', :bind_and_parse!
+  end
+
+  describe '#bind_and_parse!' do
+    let (:already_parsed) { true }
+
+    include_examples 'bind_to_target', :bind_and_parse!
+  end
+
+  describe '#bind_and_parse!' do
+    let (:already_parsed) { true }
+
+    include_examples 'bind_to_locals', :bind_and_parse!
   end
 end

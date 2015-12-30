@@ -1,6 +1,9 @@
 require 'spec_helper'
 
 describe OptBind do
+  before(:each) { @script, $0 = $0, 'meow' }
+  after(:each) { $0 = @script }
+
   describe '.new' do
     context 'with no arguments' do
       it 'creates an instance' do
@@ -21,6 +24,99 @@ describe OptBind do
 
         expect(options.parser).to equal parser
         expect(options.target).to equal target
+      end
+    end
+  end
+
+  describe '#program' do
+    let(:options) { OptBind.new }
+
+    it 'returns program name' do
+      expect(options.program).to eq 'meow'
+    end
+  end
+
+  describe '#version' do
+    let(:options) { OptBind.new }
+
+    context 'with VERSION' do
+      it 'returns program version' do
+        stub_const 'VERSION', '1.0.0'
+        expect(options.version).to eq '1.0.0'
+      end
+    end
+
+    context 'without VERSION' do
+      it 'returns nothing' do
+        expect(options.version).to be_nil
+      end
+    end
+  end
+
+  describe '#help' do
+    let(:options) { OptBind.new }
+
+    it 'returns help' do
+      expect(options.help).to eq <<-HLP
+usage: meow
+
+    -h, --help
+        --version
+
+      HLP
+    end
+
+    context 'with usage' do
+      it 'returns help' do
+        options.use '<file>'
+
+        expect(options.help).to eq <<-HLP
+usage: meow <file>
+
+    -h, --help
+        --version
+
+        HLP
+      end
+    end
+
+    context 'with option' do
+      it 'returns help' do
+        options.opt '-o --output=<file>'
+
+        expect(options.help).to eq <<-HLP
+usage: meow
+
+    -o, --output=<file>
+    -h, --help
+        --version
+
+        HLP
+      end
+    end
+
+    context 'with usages, options, and arguments' do
+      it 'returns help' do
+        options.use '[<options>] <file>'
+        options.use '--help'
+        options.use '--version'
+        options.opt '-i --[no-]interactive'
+        options.opt '-o --output=<file>'
+        options.opt '-q --quiet'
+        options.arg '<file>'
+
+        expect(options.help).to eq <<-HLP
+usage: meow [<options>] <file>
+   or: meow --help
+   or: meow --version
+
+    -i, --[no-]interactive
+    -o, --output=<file>
+    -q, --quiet
+    -h, --help
+        --version
+
+        HLP
       end
     end
   end
