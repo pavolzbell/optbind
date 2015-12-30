@@ -22,20 +22,6 @@ gems:
 - bind API:
   must be uninvasive, i.e. must not affect #on in any way, must act as #parse, see example
   ARGV, OptionParser (options)
-  bind
-  to:, defaults: to,
-    
   example: ARGV.options { |o| o.on(...); o.bind ...; o.parse! }
   on #bind call, #bind goes through all options (objects produced by make_switch) and binds them to variables 
-  NO: ARGV.bind shortcut
-
-- syntax def:
-
-(ARGV|OptionParser.new).(def[ine]_and_bind[!]) to: (binding|hash|struct|object|self), [defaults: (to|*)], [locals: true] do [o]
-  # locals: true must be explicitly set in case of to: (binding|object|self) otherwise instance vars are bound
-  [o.](use|usage) ...
-  [o.](use|usage) ...
-  [o.](opt|option) ...
-  [o.](opt|option) ...
-  [o.](arg|argument) ... # after this line o#bind happens and optionally o#parse[!]
-end[.parse[!]]
+  NO: ARGV.bind shortcut just ARGV.options.bind
