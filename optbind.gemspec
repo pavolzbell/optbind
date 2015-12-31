@@ -11,12 +11,14 @@ Gem::Specification.new do |s|
   s.homepage      = 'https://github.com/pavolzbell/optbind'
   s.license       = 'MIT'
 
-  s.files         =
+  s.files         = Dir['*.md', 'lib/**/*']
   s.require_paths = ['lib']
+
+  s.required_ruby_version     = '>= 2.2.0'
 
   s.add_development_dependency 'bundler', '~> 1.10'
   s.add_development_dependency 'rake',    '~> 10.0'
   s.add_development_dependency 'rspec',   '~> 3.3'
 
-  s.add_development_dependency 'pry'
+  s.add_development_dependency 'pry', '>= 0.10.0'
 end
