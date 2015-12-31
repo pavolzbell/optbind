@@ -19,7 +19,7 @@ partial argument analysis. Builds Git-like options and help by default.
 Binds local variables to `ARGV` and parses command line arguments: 
 
 ```ruby
-ARGV                                         #=> ['--no-verbose' '-o', 'file.out', 'file.in'] 
+ARGV                                         #=> ['--no-verbose', '-o', 'file.out', 'file.in'] 
 
 i, o, v = STDIN, STDOUT, true
 
