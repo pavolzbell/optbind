@@ -1,3 +1,11 @@
+## 0.1.0
+
+*   Fix optional argument handling and help text generation
+
+*   Update default help text 
+
+    *Pavol Zbell*
+
 ## 0.0.2
 
 *   Fix gem files 
