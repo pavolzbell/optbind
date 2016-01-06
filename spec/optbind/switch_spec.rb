@@ -126,7 +126,7 @@ describe OptBind::Switch do
       it 'returns argument' do
         expect(subject.parser_opts_from_hash argument: '=<path>').to contain_exactly %w(=<path>), nil
         expect(subject.parser_opts_from_hash argument: '=[<path>]').to contain_exactly %w(=[<path>]), nil
-        expect(subject.parser_opts_from_hash argument: '[=<path>]').to contain_exactly %w([=<path>]), nil
+        expect(subject.parser_opts_from_hash argument: '[=<path>]').to contain_exactly %w(=[<path>]), nil
       end
 
       it 'handles symbols' do
@@ -182,15 +182,33 @@ describe OptBind::Switch do
           expect(subject.parser_opts_from_string '-f --file =<path>').to contain_exactly [:REQUIRED, '-f', '--file', '=<path>'], nil
           expect(subject.parser_opts_from_string '-f -p --file --path =<path>').to contain_exactly [:REQUIRED, '-f', '-p', '--file', '--path', '=<path>'], nil
 
-          expect(subject.parser_opts_from_string '-f [=<path>]').to contain_exactly [:OPTIONAL, '-f', '[=<path>]'], nil
-          expect(subject.parser_opts_from_string '-f --file [=<path>]').to contain_exactly [:OPTIONAL, '-f', '--file', '[=<path>]'], nil
-          expect(subject.parser_opts_from_string '-f -p --file --path [=<path>]').to contain_exactly [:OPTIONAL, '-f', '-p', '--file', '--path', '[=<path>]'], nil
+          expect(subject.parser_opts_from_string '-f [=<path>]').to contain_exactly [:OPTIONAL, '-f', '=[<path>]'], nil
+          expect(subject.parser_opts_from_string '-f --file [=<path>]').to contain_exactly [:OPTIONAL, '-f', '--file', '=[<path>]'], nil
+          expect(subject.parser_opts_from_string '-f -p --file --path [=<path>]').to contain_exactly [:OPTIONAL, '-f', '-p', '--file', '--path', '=[<path>]'], nil
 
           expect(subject.parser_opts_from_string '-f --file=<path>').to contain_exactly [:REQUIRED, '-f', '--file', '=<path>'], nil
           expect(subject.parser_opts_from_string '-f -p --file --path=<path>').to contain_exactly [:REQUIRED, '-f', '-p', '--file', '--path', '=<path>'], nil
 
-          expect(subject.parser_opts_from_string '-f --file[=<path>]').to contain_exactly [:OPTIONAL, '-f', '--file', '[=<path>]'], nil
-          expect(subject.parser_opts_from_string '-f -p --file --path[=<path>]').to contain_exactly [:OPTIONAL, '-f', '-p', '--file', '--path', '[=<path>]'], nil
+          expect(subject.parser_opts_from_string '-f --file[=<path>]').to contain_exactly [:OPTIONAL, '-f', '--file', '=[<path>]'], nil
+          expect(subject.parser_opts_from_string '-f -p --file --path[=<path>]').to contain_exactly [:OPTIONAL, '-f', '-p', '--file', '--path', '=[<path>]'], nil
+        end
+
+        context 'with description' do
+          it 'returns shorts, longs, style, argument, and description' do
+            expect(subject.parser_opts_from_string '-f =<path> Path to file.').to contain_exactly [:REQUIRED, '-f', '=<path>', 'Path to file.'], nil
+            expect(subject.parser_opts_from_string '-f --file =<path> Path to file.').to contain_exactly [:REQUIRED, '-f', '--file', '=<path>', 'Path to file.'], nil
+            expect(subject.parser_opts_from_string '-f -p --file --path =<path> Path to file.').to contain_exactly [:REQUIRED, '-f', '-p', '--file', '--path', '=<path>', 'Path to file.'], nil
+
+            expect(subject.parser_opts_from_string '-f [=<path>] Path to file.').to contain_exactly [:OPTIONAL, '-f', '=[<path>]', 'Path to file.'], nil
+            expect(subject.parser_opts_from_string '-f --file [=<path>] Path to file.').to contain_exactly [:OPTIONAL, '-f', '--file', '=[<path>]', 'Path to file.'], nil
+            expect(subject.parser_opts_from_string '-f -p --file --path [=<path>] Path to file.').to contain_exactly [:OPTIONAL, '-f', '-p', '--file', '--path', '=[<path>]', 'Path to file.'], nil
+
+            expect(subject.parser_opts_from_string '-f --file=<path> Path to file.').to contain_exactly [:REQUIRED, '-f', '--file', '=<path>', 'Path to file.'], nil
+            expect(subject.parser_opts_from_string '-f -p --file --path=<path> Path to file.').to contain_exactly [:REQUIRED, '-f', '-p', '--file', '--path', '=<path>', 'Path to file.'], nil
+
+            expect(subject.parser_opts_from_string '-f --file[=<path>] Path to file.').to contain_exactly [:OPTIONAL, '-f', '--file', '=[<path>]', 'Path to file.'], nil
+            expect(subject.parser_opts_from_string '-f -p --file --path[=<path>] Path to file.').to contain_exactly [:OPTIONAL, '-f', '-p', '--file', '--path', '=[<path>]', 'Path to file.'], nil
+          end
         end
       end
 
@@ -206,21 +224,21 @@ describe OptBind::Switch do
       context 'with type' do
         it 'returns argument and type' do
           expect(subject.parser_opts_from_string '=<value:Numeric>').to contain_exactly [:REQUIRED, Numeric, '=<value>'], nil
-          expect(subject.parser_opts_from_string '[=<value:Numeric>]').to contain_exactly [:OPTIONAL, Numeric, '[=<value>]'], nil
+          expect(subject.parser_opts_from_string '[=<value:Numeric>]').to contain_exactly [:OPTIONAL, Numeric, '=[<value>]'], nil
         end
       end
 
       context 'with values' do
         it 'returns argument and values' do
           expect(subject.parser_opts_from_string '=(on|off)').to contain_exactly [:REQUIRED, %w(on off), '=(on|off)'], nil
-          expect(subject.parser_opts_from_string '[=(on|off)]').to contain_exactly [:OPTIONAL, %w(on off), '[=(on|off)]'], nil
+          expect(subject.parser_opts_from_string '[=(on|off)]').to contain_exactly [:OPTIONAL, %w(on off), '=[(on|off)]'], nil
         end
       end
 
       context 'with regexp' do
         it 'returns argument and regexp' do
           expect(subject.parser_opts_from_string '=<indent:\d+>').to contain_exactly [:REQUIRED, /\d+/, '=<indent>'], nil
-          expect(subject.parser_opts_from_string '[=<indent:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '[=<indent>]'], nil
+          expect(subject.parser_opts_from_string '[=<indent:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<indent>]'], nil
         end
       end
     end

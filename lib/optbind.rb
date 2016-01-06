@@ -26,9 +26,9 @@ class OptionBinder
 
   def resolve_parser(parser = nil)
     parser || OptionParser.new do |p|
-      p.define_singleton_method(:banner) { (b = super()) !~ /\AU/ ? b : "usage: #{program_name}\n\n" }
+      p.define_singleton_method(:banner) { (b = super()) !~ /\AU/ ? b : "usage: #{program_name} [<options>]\n\n" }
       p.define_singleton_method(:version) { super() || (defined?(::VERSION) && ::VERSION) }
-      p.define_singleton_method(:help) { super() << "    -h, --help\n        --version\n\n" }
+      p.define_singleton_method(:help) { super().gsub(/(-\S+)=\[/, '\1[=') << "    -h, --help\n        --version\n\n" }
     end
   end
 
@@ -95,7 +95,7 @@ class OptionBinder
     opts, handler, bound, variable, default = *several_variants(*opts, &handler)
 
     @parser.on(*opts) do |r|
-      unless opts.include? :OPTIONAL
+      if opts.include? :REQUIRED
         a = opts.select { |o| o =~ /\A-/ }.sort_by { |o| o.length }[-1]
         @parser.abort "missing argument: #{a}=" if !r || (r.respond_to?(:empty?) && r.empty?)
       end
@@ -147,7 +147,6 @@ class OptionBinder
 
       pattern = hash[:pattern] || hash[:type]
       values = hash[:values]
-
       names = [hash[:long], hash[:longs]].flatten.map { |n| n.to_s.sub(/\A-{,2}/, '--') if n }
       names += [hash[:short], hash[:shorts]].flatten.map { |n| n.to_s.sub(/\A-{,2}/, '-') if n }
       names += [hash[:name], hash[:names]].flatten.map do |n|
@@ -157,7 +156,7 @@ class OptionBinder
         n[2] ? "--#{n}" : "-#{n}"
       end
 
-      argument = (hash[:argument].to_s if hash[:argument])
+      argument = (hash[:argument].to_s.sub(/\A\[=/, '=[') if hash[:argument])
       description = ([hash[:description]].flatten * ' ' if hash[:description])
       handler ||= hash[:handler]
       return ([style, pattern, values] + names + [argument, description]).compact, handler
@@ -173,18 +172,18 @@ class OptionBinder
       style, pattern, values, argument = nil
 
       while string.sub!(/\A(?:(?<long>--[\[\]\-\w]+[\]\w]+)?(?:(?<argument>\[?=[<(]\S+[)>]\.{,3}\]?)|\s+))/, '')
-        longs << $~[:long]
+        longs << $~[:long] if $~[:long]
+        next unless $~[:argument]
         argument = $~[:argument]
-
-        next unless argument
-
         style = argument[0] == '=' ? :REQUIRED : :OPTIONAL
         values = $~[:values].split('|') if argument =~ /\[?=\((?<values>\S*)\)\]?/
 
         if values.nil? && argument =~ /\[?=<(?<name>\S+):(?<pattern>\S+)>\]?/
           pattern = Module.const_get($~[:pattern]) rescue Regexp.new($~[:pattern])
           argument = "=<#{$~[:name]}>"
-          argument = "[#{argument}]" if style == :OPTIONAL
+          argument = "=[#{argument[1..-1]}]" if style == :OPTIONAL
+        else
+          argument.sub!(/\A\[=/, '=[')
         end
       end
 

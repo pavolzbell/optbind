@@ -16,7 +16,7 @@ partial argument analysis. Builds Git-like options and help by default.
 
 ## Usage
 
-Binds local variables to `ARGV` and parses command line arguments: 
+Bind local variables to `ARGV` and parse command line arguments: 
 
 ```ruby
 require 'optbind'

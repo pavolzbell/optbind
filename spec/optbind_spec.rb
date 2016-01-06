@@ -58,7 +58,7 @@ describe OptBind do
 
     it 'returns help' do
       expect(options.help).to eq <<-HLP
-usage: meow
+usage: meow [<options>]
 
     -h, --help
         --version
@@ -68,10 +68,10 @@ usage: meow
 
     context 'with usage' do
       it 'returns help' do
-        options.use '<file>'
+        options.use '[<options>] <file>'
 
         expect(options.help).to eq <<-HLP
-usage: meow <file>
+usage: meow [<options>] <file>
 
     -h, --help
         --version
@@ -85,7 +85,7 @@ usage: meow <file>
         options.opt '-o --output=<file>'
 
         expect(options.help).to eq <<-HLP
-usage: meow
+usage: meow [<options>]
 
     -o, --output=<file>
     -h, --help
@@ -95,12 +95,13 @@ usage: meow
       end
     end
 
-    context 'with usages, options, and arguments' do
+    context 'with simple variants' do
       it 'returns help' do
         options.use '[<options>] <file>'
         options.use '--help'
         options.use '--version'
         options.opt '-i --[no-]interactive'
+        options.opt '   --trim[=<size>]'
         options.opt '-o --output=<file>'
         options.opt '-q --quiet'
         options.arg '<file>'
@@ -111,12 +112,174 @@ usage: meow [<options>] <file>
    or: meow --version
 
     -i, --[no-]interactive
+        --trim[=<size>]
     -o, --output=<file>
     -q, --quiet
     -h, --help
         --version
 
         HLP
+      end
+    end
+
+    context 'with complex variants' do
+      context 'with usages and arguments' do
+        it 'returns help' do
+          options.use '--init <directory>...'
+          options.use '[<options>] <branch>'
+          options.use '[<options>] [<branch>] <file>'
+          options.use '--help'
+          options.use '--version'
+
+          options.arg '<path_or_branch>'
+          options.arg '[<file>]'
+
+          expect(options.help).to eq <<-HLP
+usage: meow --init <directory>...
+   or: meow [<options>] <branch>
+   or: meow [<options>] [<branch>] <file>
+   or: meow --help
+   or: meow --version
+
+    -h, --help
+        --version
+
+          HLP
+        end
+      end
+
+      context 'with short options' do
+        it 'returns help' do
+            options.opt '-a'
+            options.opt '-v                      Be more verbose.'
+            options.opt '-q -Q'
+            options.opt '-e -x                   Export some stuff.'
+            options.opt '-o     =(asc|desc)'
+            options.opt '-s     =(v0|v1|v2)      Specifies schema version. Easy stuff.'
+            options.opt '-m     =<directory>'
+            options.opt '-n     =<path>          Path to file with names.'
+            options.opt '-r -R  =<ref>'
+            options.opt '-h -H  =<hash>          Nice hash.'
+            options.opt '-c    [=<ref>]'
+            options.opt '-t    [=<size>]         Trims to size, 80 by default.'
+            options.opt '-w -W [=<ref>]'
+            options.opt '-z -Z [=<size>]         Special size.'
+
+            expect(options.help).to eq <<-HLP
+usage: meow [<options>]
+
+    -a
+    -v                               Be more verbose.
+    -q, -Q
+    -e, -x                           Export some stuff.
+    -o=(asc|desc)
+    -s=(v0|v1|v2)                    Specifies schema version. Easy stuff.
+    -m=<directory>
+    -n=<path>                        Path to file with names.
+    -r, -R=<ref>
+    -h, -H=<hash>                    Nice hash.
+    -c[=<ref>]
+    -t[=<size>]                      Trims to size, 80 by default.
+    -w, -W[=<ref>]
+    -z, -Z[=<size>]                  Special size.
+    -h, --help
+        --version
+
+          HLP
+        end
+      end
+
+      context 'with long options' do
+        it 'returns help' do
+          options.opt '--abort'
+          options.opt '--[no-]verbose                                Be more verbose.'
+          options.opt '--quiet  --silent'
+          options.opt '--export --dump                               Export some stuff.'
+          options.opt '--order                    =(asc|desc)'
+          options.opt '--schema                   =(v0|v1|v2)        Specifies schema version. Easy stuff.'
+          options.opt '--main                     =<directory>'
+          options.opt '--names                    =<path>            Path to file with names.'
+          options.opt '--reference --ref          =<ref>'
+          options.opt '--hash --schema-hash       =<hash>            Nice hash.'
+          options.opt '--checkout                [=<ref>]'
+          options.opt '--trim                    [=<size>]           Trims to size, 80 by default.'
+          options.opt '--extra --extra-reference [=<ref>]'
+          options.opt '--bucket --bucket-size    [=<size>]           Special size.'
+
+          expect(options.help).to eq <<-HLP
+usage: meow [<options>]
+
+        --abort
+        --[no-]verbose               Be more verbose.
+        --quiet, --silent
+        --export, --dump             Export some stuff.
+        --order=(asc|desc)
+        --schema=(v0|v1|v2)          Specifies schema version. Easy stuff.
+        --main=<directory>
+        --names=<path>               Path to file with names.
+        --reference, --ref=<ref>
+        --hash, --schema-hash=<hash> Nice hash.
+        --checkout[=<ref>]
+        --trim[=<size>]              Trims to size, 80 by default.
+        --extra, --extra-reference[=<ref>]
+        --bucket, --bucket-size[=<size>]
+                                     Special size.
+    -h, --help
+        --version
+
+          HLP
+        end
+      end
+
+      context 'with mixed options' do
+        it 'returns help' do
+          options.opt '-q    --quiet'
+          options.opt '-d    --dump                                  Dumps some stuff.'
+          options.opt '-f    --repair   --fix                        Repairs and fixes stuff.'
+          options.opt '-v    --[no-]validate --check'
+          options.opt '-i -I --interactive'
+          options.opt '-s -w --[no-]sort                             Sorts stuff. Simple as that.'
+          options.opt '-P    --pfx --prefix=<string>'
+          options.opt '-S    --sfx --suffix=<string>                 Sets some suffix.'
+          options.opt '-r -R --root=<path>'
+          options.opt '-x -X --extra=<data>                          Some extra stuff. Really good.'
+          options.opt '-t    --trim[=<size>]'
+          options.opt '-o    --order[=(asc|desc)]                    Orders stuff. Not as simple as that.'
+          options.opt '-a -A --append[=<string>]                     Appends some stuff.'
+          options.opt '-b -B --bind[=<data>]'
+          options.opt '-y    --yield[=<block>]  --block'
+          options.opt '-z    --fail[=<message>] --raise              Fails.'
+          options.opt '-j -J --j2b --jump-to-bin[=<path>]'
+          options.opt '-c -C --chk --checkout[=<ref>]                Checkouts some important stuff.'
+
+          expect(options.help).to eq <<-HLP
+usage: meow [<options>]
+
+    -q, --quiet
+    -d, --dump                       Dumps some stuff.
+    -f, --repair, --fix              Repairs and fixes stuff.
+    -v, --[no-]validate, --check
+    -i, -I, --interactive
+    -s, -w, --[no-]sort              Sorts stuff. Simple as that.
+    -P, --pfx, --prefix=<string>
+    -S, --sfx, --suffix=<string>     Sets some suffix.
+    -r, -R, --root=<path>
+    -x, -X, --extra=<data>           Some extra stuff. Really good.
+    -t, --trim[=<size>]
+    -o, --order[=(asc|desc)]         Orders stuff. Not as simple as that.
+    -a, -A, --append[=<string>]      Appends some stuff.
+    -b, -B, --bind[=<data>]
+    -y, --yield, --block[=<block>]
+    -z, --fail, --raise[=<message>]  Fails.
+    -j, -J, --j2b[<path>],
+        --jump-to-bin
+    -c, -C, --chk[<ref>],            Checkouts some important stuff.
+        --checkout
+    -h, --help
+        --version
+
+          HLP
+        end
       end
     end
   end
