@@ -1,7 +1,7 @@
 # OptBind
 
 [![Build Status](https://img.shields.io/travis/pavolzbell/optbind.svg)](https://travis-ci.org/pavolzbell/optbind)
-[![Gem Version](https://img.shields.io/gem/v/optbind.svg)](https://badge.fury.io/gh/pavolzbell/optbind)
+[![Gem Version](https://img.shields.io/gem/v/optbind.svg)](https://rubygems.org/gems/optbind)
 
 Binds command-line options to variables.
 
