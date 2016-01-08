@@ -1,3 +1,9 @@
+## 0.2.0
+
+*   Unconditionally abort on any parse error
+
+    *Pavol Zbell*
+
 ## 0.1.1
 
 *   Fix critical bug when parsing arguments
