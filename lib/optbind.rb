@@ -40,34 +40,8 @@ class OptionBinder
   def_delegators :@parser, :abort, :warn
   def_delegators :@parser, :load
 
-  def order(*argv, &blk)
-    @parser.order *argv, &blk
-    parse_args argv
-  end
-
-  def order!(argv)
-    @parser.order! argv
-    parse_args argv
-  end
-
-  def permute(*argv)
-    @parser.permute *argv
-    parse_args argv
-  end
-
-  def permute!(argv)
-    @parser.permute! argv
-    parse_args argv
-  end
-
-  def parse(*argv)
-    @parser.parse *argv
-    parse_args argv
-  end
-
-  def parse!(argv)
-    @parser.parse! argv
-    parse_args! argv
+  { order: '*argv, &blk', order!: 'argv', permute: '*argv', permute!: 'argv', parse: '*argv', parse!: 'argv' }.each do |m, a|
+    class_eval "def #{m} #{a}; @parser.#{m} #{a}; parse_args#{'!' if m =~ /!\z/} argv; rescue OptionParser::ParseError; @parser.abort; end", __FILE__, __LINE__
   end
 
   def_delegators :@parser, :to_a, :to_s

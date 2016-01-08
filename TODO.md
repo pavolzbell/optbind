@@ -3,6 +3,7 @@
   - `Switch#parser_opts_from_string` - support regexps with options, like `=<name:/[a-z]/i>`
   - `Switch#parser_opts_from_string` - support ranges, like `=<indent:0..8>`
   - add default support for ranges on `OptionParser` level
+  - add support for `Module#class_variables`
   - add type conversion and patterns for arguments
   - make optional extensions for `OptionParser` monkey-patching `make_switch` to support hash-or-string-exclusive arguments 
 
