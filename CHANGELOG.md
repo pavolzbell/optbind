@@ -1,3 +1,9 @@
+## 0.1.1
+
+*   Fix critical bug when parsing arguments
+
+    *Pavol Zbell*
+
 ## 0.1.0
 
 *   Fix optional argument handling and help text generation
