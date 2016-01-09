@@ -1,3 +1,9 @@
+## 0.2.1
+
+*   Fix multiple argument parsing with arrays as default values
+
+    *Pavol Zbell*
+
 ## 0.2.0
 
 *   Unconditionally abort on any parse error
