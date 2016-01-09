@@ -198,7 +198,7 @@ class OptionBinder
     @argument_definitions.each do |a|
       default = (@bound_variables_with_defaults ||= {})[a[:variable]]
       r = argv[0] ? argv.shift : default
-      r = ([r] + argv.shift(argv.size)) if a[:opts].include? :MULTIPLE
+      r = ([r].flatten + argv.shift(argv.size)) if a[:opts].include? :MULTIPLE
       @parser.abort 'missing arguments' if r.nil? && a[:opts].include?(:REQUIRED)
       (a[:handler] || -> (_) { r }).call(r == nil ? default : r).tap { |x| @writer.call a[:variable], x if a[:bound] }
       return argv if a[:opts].include? :MULTIPLE
