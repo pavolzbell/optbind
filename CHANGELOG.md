@@ -1,3 +1,9 @@
+## 0.2.2
+
+*   Fix default option handler when encountering blank arguments 
+
+    *Pavol Zbell*
+
 ## 0.2.1
 
 *   Fix multiple argument parsing with arrays as default values
