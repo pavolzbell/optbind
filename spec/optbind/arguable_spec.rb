@@ -31,6 +31,7 @@ describe OptBind::Arguable do
     it 'defines bound option and argument' do
       define.call argv
       expect(argv.binder).to be_an_instance_of OptionBinder
+      expect(argv.binder.bound_defaults.keys).to contain_exactly(:o, :i)
       expect(argv.binder.bound_variables.keys).to contain_exactly(:o, :i)
     end
   end
@@ -40,11 +41,13 @@ describe OptBind::Arguable do
       unless already_parsed
         expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
         expect(argv.binder.bound_variables).to eq(o: :STDOUT, i: :STDIN)
+        expect(argv.binder.assigned_variables).to eq({})
         expect(argv.parse!).to eq []
       end
 
       expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
       expect(argv.binder.bound_variables).to eq(o: 'file.out', i: 'file.in')
+      expect(argv.binder.assigned_variables).to eq(o: 'file.out', i: 'file.in')
       expect(argv).to eq []
     end
   end

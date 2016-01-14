@@ -290,9 +290,17 @@ usage: meow [<options>]
         options = OptBind.new(target: target, bind: bind)
         expect(options.bound_defaults.key? :o).to be false
         expect(options.bound_variables.key? :o).to be false
+        expect(options.assigned_variables.key? :o).to be false
+        expect(options.default? :o).to be nil
+        expect(options.bound? :o).to be false
+        expect(options.assigned? :o).to be nil
         expect(options.opt 'o --output').to equal options
         expect(options.bound_defaults.key? :o).to be true
         expect(options.bound_variables.key? :o).to be true
+        expect(options.assigned_variables.key? :o).to be false
+        expect(options.default? :o).to be true
+        expect(options.bound? :o).to be true
+        expect(options.assigned? :o).to be false
       end
     end
 
@@ -362,11 +370,21 @@ usage: meow [<options>]
   describe 'accessing a bound option' do
     shared_examples_for 'read_and_write' do
       it 'reads and writes' do
+        def write_through(options, variable, value)
+          options.instance_eval { handle! nil, value, true, variable, nil }
+        end
+
         expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: :STDOUT)
-        writer.call(:o, STDERR)
+        expect(options.assigned_variables).to eq({})
+        write_through options, :o, :STDERR
         expect(options.bound_defaults).to eq(o: :STDOUT)
-        expect(options.bound_variables).to eq(o: STDERR)
+        expect(options.bound_variables).to eq(o: :STDERR)
+        expect(options.assigned_variables).to eq(o: :STDERR)
+        writer.call :o, :STDIN
+        expect(options.bound_defaults).to eq(o: :STDOUT)
+        expect(options.bound_variables).to eq(o: :STDIN)
+        expect(options.assigned_variables).to eq(o: :STDERR)
       end
     end
 
@@ -457,9 +475,11 @@ usage: meow [<options>]
       it 'parses' do
         expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: :STDOUT)
+        expect(options.assigned_variables).to eq({})
         expect(options.parse('--output=file.out')).to contain_exactly('--output=file.out')
         expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: 'file.out')
+        expect(options.assigned_variables).to eq(o: 'file.out')
       end
     end
 
