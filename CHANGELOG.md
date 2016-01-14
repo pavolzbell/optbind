@@ -1,3 +1,11 @@
+## 0.3.0
+
+*   Add support for access to assigned variables
+
+*   Fix default argument handler when encountering blank arguments 
+
+    *Pavol Zbell*
+
 ## 0.2.2
 
 *   Fix default option handler when encountering blank arguments 
