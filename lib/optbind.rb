@@ -74,7 +74,7 @@ class OptionBinder
         @parser.abort "missing argument: #{a}=" if !r || (r.respond_to?(:empty?) && r.empty?)
       end
 
-      (handler || -> (x) { x }).call(r == nil ? default : r).tap { |x| @writer.call variable, x if bound }
+      handle! handler, r, bound, variable, default
     end
 
     (@bound_variables_with_defaults ||= {})[variable] = default if bound
@@ -106,10 +106,24 @@ class OptionBinder
     Hash[@bound_variables_with_defaults.keys.map { |v| [v, @reader.call(v)] }]
   end
 
+  def assigned_variables
+    return {} unless @assigned_variables_with_values
+    @assigned_variables_with_values.dup
+  end
+
   def default?(v)
     v = v.to_sym
-    return nil unless (@bound_variables_with_defaults || {}).has_key? v
-    @bound_variables_with_defaults[v] == @reader.call(v)
+    return nil unless bound? v
+    (@bound_variables_with_defaults[v] || {}) == @reader.call(v)
+  end
+
+  def bound?(v)
+    (@bound_variables_with_defaults || {}).has_key? v.to_sym
+  end
+
+  def assigned?(v)
+    return nil unless bound? v
+    (@assigned_variables_with_values || {}).has_key? v.to_sym
   end
 
   module Switch
@@ -200,7 +214,7 @@ class OptionBinder
       r = argv[0] ? argv.shift : default
       r = ([r].flatten + argv.shift(argv.size)) if a[:opts].include? :MULTIPLE
       @parser.abort 'missing arguments' if r.nil? && a[:opts].include?(:REQUIRED)
-      (a[:handler] || -> (_) { r }).call(r == nil ? default : r).tap { |x| @writer.call a[:variable], x if a[:bound] }
+      handle! a[:handler], r, a[:bound], a[:variable], default
       return argv if a[:opts].include? :MULTIPLE
     end
     @parser.abort 'too many arguments' if argv[0]
@@ -208,6 +222,16 @@ class OptionBinder
   end
 
   private :parse_args, :parse_args!
+
+  def handle!(handler, raw, bound, variable, default)
+    (handler || -> (r) { r }).call(raw == nil ? default : raw).tap do |x|
+      return x unless bound
+      @writer.call variable, x
+      (@assigned_variables_with_values ||= {})[variable] = x
+    end
+  end
+
+  private :handle!
 
   module Arguable
     def binder=(bind)
