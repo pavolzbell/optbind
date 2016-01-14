@@ -74,7 +74,7 @@ class OptionBinder
         @parser.abort "missing argument: #{a}=" if !r || (r.respond_to?(:empty?) && r.empty?)
       end
 
-      (handler || -> (_) { r }).call(r == nil ? default : r).tap { |x| @writer.call variable, x if bound }
+      (handler || -> (x) { x }).call(r == nil ? default : r).tap { |x| @writer.call variable, x if bound }
     end
 
     (@bound_variables_with_defaults ||= {})[variable] = default if bound
