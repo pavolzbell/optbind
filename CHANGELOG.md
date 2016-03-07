@@ -1,3 +1,9 @@
+## 0.3.1
+
+*   Fix critical bug when parsing arguments 
+
+    *Pavol Zbell*
+
 ## 0.3.0
 
 *   Add support for access to assigned variables
