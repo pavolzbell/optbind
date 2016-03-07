@@ -235,7 +235,7 @@ usage: meow [<options>]
         it 'returns help' do
           options.opt '-q    --quiet'
           options.opt '-d    --dump                                  Dumps some stuff.'
-          options.opt '-f    --repair   --fix                        Repairs and fixes stuff.'
+          options.opt '-f    --repair        --fix                   Repairs and fixes stuff.'
           options.opt '-v    --[no-]validate --check'
           options.opt '-i -I --interactive'
           options.opt '-s -w --[no-]sort                             Sorts stuff. Simple as that.'

@@ -144,7 +144,7 @@ class OptionBinder
         n[2] ? "--#{n}" : "-#{n}"
       end
 
-      argument = (hash[:argument].to_s.sub(/\A\[=/, '=[') if hash[:argument])
+      argument = (hash[:argument].to_s.sub(/\A(\[)?=?/, '=\1') if hash[:argument])
       description = ([hash[:description]].flatten * ' ' if hash[:description])
       handler ||= hash[:handler]
       return ([style, pattern, values] + names + [argument, description]).compact, handler
@@ -159,19 +159,19 @@ class OptionBinder
 
       style, pattern, values, argument = nil
 
-      while string.sub!(/\A(?:(?<long>--[\[\]\-\w]+[\]\w]+)?(?:(?<argument>\[?=[<(]\S+[)>]\.{,3}\]?)|\s+))/, '')
+      while string.sub!(/\A(?:(?<long>--[\[\]\-\w]+[\]\w]+)?(?:(?<argument>(?:\[?=?|=\[)[<(]\S+[)>]\.{,3}\]?)|\s+))/, '')
         longs << $~[:long] if $~[:long]
         next unless $~[:argument]
         argument = $~[:argument]
-        style = argument[0] == '=' ? :REQUIRED : :OPTIONAL
-        values = $~[:values].split('|') if argument =~ /\[?=\((?<values>\S*)\)\]?/
+        style = argument =~ /\A=?[<(]/ ? :REQUIRED : :OPTIONAL
+        values = $~[:values].split('|') if argument =~ /(?:\[?=?|=\[)\((?<values>\S*)\)\]?/
 
-        if values.nil? && argument =~ /\[?=<(?<name>\S+):(?<pattern>\S+)>\]?/
+        if values.nil? && argument =~ /(?:\[?=?|=\[)<(?<name>\S+):(?<pattern>\S+)>\]?/
           pattern = Module.const_get($~[:pattern]) rescue Regexp.new($~[:pattern])
           argument = "=<#{$~[:name]}>"
           argument = "=[#{argument[1..-1]}]" if style == :OPTIONAL
         else
-          argument.sub!(/\A\[=/, '=[')
+          argument.sub!(/\A(?:=\[|\[?=?)/, style == :OPTIONAL ? '=[' : '=')
         end
       end
 

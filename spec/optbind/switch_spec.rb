@@ -123,10 +123,24 @@ describe OptBind::Switch do
     end
 
     context 'with argument' do
-      it 'returns argument' do
-        expect(subject.parser_opts_from_hash argument: '=<path>').to contain_exactly %w(=<path>), nil
-        expect(subject.parser_opts_from_hash argument: '=[<path>]').to contain_exactly %w(=[<path>]), nil
-        expect(subject.parser_opts_from_hash argument: '[=<path>]').to contain_exactly %w(=[<path>]), nil
+      context 'when required' do
+        it 'returns argument' do
+          expect(subject.parser_opts_from_hash argument: '<path>').to contain_exactly %w(=<path>), nil
+          expect(subject.parser_opts_from_hash argument: '=<path>').to contain_exactly %w(=<path>), nil
+        end
+      end
+
+      context 'when optional' do
+        it 'returns argument' do
+          expect(subject.parser_opts_from_hash argument: '[<path>]').to contain_exactly %w(=[<path>]), nil
+          expect(subject.parser_opts_from_hash argument: '[=<path>]').to contain_exactly %w(=[<path>]), nil
+        end
+
+        context 'with legacy syntax' do
+          it 'returns argument' do
+            expect(subject.parser_opts_from_hash argument: '=[<path>]').to contain_exactly %w(=[<path>]), nil
+          end
+        end
       end
 
       it 'handles symbols' do
@@ -221,24 +235,91 @@ describe OptBind::Switch do
     end
 
     context 'with argument' do
-      context 'with type' do
-        it 'returns argument and type' do
-          expect(subject.parser_opts_from_string '=<value:Numeric>').to contain_exactly [:REQUIRED, Numeric, '=<value>'], nil
-          expect(subject.parser_opts_from_string '[=<value:Numeric>]').to contain_exactly [:OPTIONAL, Numeric, '=[<value>]'], nil
+      context 'with name only' do
+        context 'when required' do
+          it 'returns argument' do
+            expect(subject.parser_opts_from_string '<path>').to contain_exactly [:REQUIRED, '=<path>'], nil
+            expect(subject.parser_opts_from_string '=<path>').to contain_exactly [:REQUIRED, '=<path>'], nil
+          end
+        end
+
+        context 'when optional' do
+          it 'returns argument' do
+            expect(subject.parser_opts_from_string '[<path>]').to contain_exactly [:OPTIONAL, '=[<path>]'], nil
+            expect(subject.parser_opts_from_string '[=<path>]').to contain_exactly [:OPTIONAL, '=[<path>]'], nil
+          end
+
+          context 'with legacy syntax' do
+            it 'returns argument' do
+              expect(subject.parser_opts_from_string '=[<path>]').to contain_exactly [:OPTIONAL, '=[<path>]'], nil
+            end
+          end
+        end
+      end
+
+      context 'with name and type' do
+        context 'when required' do
+          it 'returns argument and type' do
+            expect(subject.parser_opts_from_string '<value:Numeric>').to contain_exactly [:REQUIRED, Numeric, '=<value>'], nil
+            expect(subject.parser_opts_from_string '=<value:Numeric>').to contain_exactly [:REQUIRED, Numeric, '=<value>'], nil
+          end
+        end
+
+        context 'when optional' do
+          it 'returns argument and type' do
+            expect(subject.parser_opts_from_string '[<value:Numeric>]').to contain_exactly [:OPTIONAL, Numeric, '=[<value>]'], nil
+            expect(subject.parser_opts_from_string '[=<value:Numeric>]').to contain_exactly [:OPTIONAL, Numeric, '=[<value>]'], nil
+          end
+
+          context 'with legacy syntax' do
+            it 'returns argument and type' do
+              expect(subject.parser_opts_from_string '=[<value:Numeric>]').to contain_exactly [:OPTIONAL, Numeric, '=[<value>]'], nil
+            end
+          end
+        end
+      end
+
+      context 'with name and regexp' do
+        context 'when required' do
+          it 'returns argument and regexp' do
+            expect(subject.parser_opts_from_string '<indent:\d+>').to contain_exactly [:REQUIRED, /\d+/, '=<indent>'], nil
+            expect(subject.parser_opts_from_string '=<indent:\d+>').to contain_exactly [:REQUIRED, /\d+/, '=<indent>'], nil
+          end
+        end
+
+        context 'when optional' do
+          it 'returns argument and regexp' do
+            expect(subject.parser_opts_from_string '[<indent:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<indent>]'], nil
+            expect(subject.parser_opts_from_string '[=<indent:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<indent>]'], nil
+          end
+
+          context 'with legacy syntax' do
+            it 'returns argument and regexp' do
+              expect(subject.parser_opts_from_string '=[<indent:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<indent>]'], nil
+            end
+          end
         end
       end
 
       context 'with values' do
-        it 'returns argument and values' do
-          expect(subject.parser_opts_from_string '=(on|off)').to contain_exactly [:REQUIRED, %w(on off), '=(on|off)'], nil
-          expect(subject.parser_opts_from_string '[=(on|off)]').to contain_exactly [:OPTIONAL, %w(on off), '=[(on|off)]'], nil
+        context 'when required' do
+          it 'returns argument and values' do
+            expect(subject.parser_opts_from_string '(on|off)').to contain_exactly [:REQUIRED, %w(on off), '=(on|off)'], nil
+            expect(subject.parser_opts_from_string '=(on|off)').to contain_exactly [:REQUIRED, %w(on off), '=(on|off)'], nil
+          end
         end
-      end
 
-      context 'with regexp' do
-        it 'returns argument and regexp' do
-          expect(subject.parser_opts_from_string '=<indent:\d+>').to contain_exactly [:REQUIRED, /\d+/, '=<indent>'], nil
-          expect(subject.parser_opts_from_string '[=<indent:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<indent>]'], nil
+        context 'when optional' do
+          it 'returns argument and values' do
+            expect(subject.parser_opts_from_string '[(on|off)]').to contain_exactly [:OPTIONAL, %w(on off), '=[(on|off)]'], nil
+            expect(subject.parser_opts_from_string '[=(on|off)]').to contain_exactly [:OPTIONAL, %w(on off), '=[(on|off)]'], nil
+          end
+
+          context 'with legacy syntax' do
+            it 'returns argument and values' do
+              expect(subject.parser_opts_from_string '=[(on|off)]').to contain_exactly [:OPTIONAL, %w(on off), '=[(on|off)]'], nil
+            end
+          end
         end
       end
     end
