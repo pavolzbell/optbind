@@ -1,3 +1,9 @@
+## 0.3.2
+
+*   Fix handling of blanks as array arguments 
+
+    *Pavol Zbell*
+
 ## 0.3.1
 
 *   Fix critical bug when parsing arguments 
