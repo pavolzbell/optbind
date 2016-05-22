@@ -123,12 +123,12 @@ class OptionBinder
   end
 
   def bound?(v)
-    (@bound_variables_with_defaults || {}).has_key? v.to_sym
+    (@bound_variables_with_defaults || {}).key? v.to_sym
   end
 
   def assigned?(v)
     return nil unless bound? v
-    (@assigned_variables_with_values || {}).has_key? v.to_sym
+    (@assigned_variables_with_values || {}).key? v.to_sym
   end
 
   module Switch
