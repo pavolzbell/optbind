@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'forwardable'
 require 'optparse'
 
@@ -54,10 +56,10 @@ class OptionBinder
     line = (args * ' ') << "\n"
 
     if @parser.banner =~ /\Ausage:.+\n\n/i
-      @parser.banner = "usage: #{program} " << line
+      @parser.banner = "usage: #{program} #{line}"
       @parser.separator "\n"
     else
-      @parser.banner << "   or: #{program} " << line
+      @parser.banner += "   or: #{program} #{line}"
     end
 
     self
@@ -151,7 +153,7 @@ class OptionBinder
     end
 
     def self.parser_opts_from_string(string = '', &handler)
-      shorts, longs = [], []
+      string, shorts, longs = string.dup, [], []
 
       while string.sub!(/\A(?:(?<short>-\w)\s+)/, '')
         shorts << $~[:short]
@@ -171,7 +173,7 @@ class OptionBinder
           argument = "=<#{$~[:name]}>"
           argument = "=[#{argument[1..-1]}]" if style == :OPTIONAL
         else
-          argument.sub!(/\A(?:=\[|\[?=?)/, style == :OPTIONAL ? '=[' : '=')
+          argument = argument.sub(/\A(?:=\[|\[?=?)/, style == :OPTIONAL ? '=[' : '=')
         end
       end
 
