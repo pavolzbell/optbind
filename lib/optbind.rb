@@ -27,10 +27,13 @@ class OptionBinder
   end
 
   def resolve_parser(parser = nil)
-    parser || OptionParser.new do |p|
+    parser ||= OptionParser.new do |p|
       p.define_singleton_method(:banner) { (b = super()) !~ /\AU/ ? b : "usage: #{program_name} [<options>]\n\n" }
-      p.define_singleton_method(:version) { super() || (defined?(::VERSION) && ::VERSION) }
       p.define_singleton_method(:help) { super().gsub(/(-\S+)=\[/, '\1[=') << "    -h, --help\n        --version\n\n" }
+    end
+    parser.tap do |p|
+      p.program_name = ::PROGRAM if defined? ::PROGRAM
+      p.version = ::VERSION if defined? ::VERSION
     end
   end
 
@@ -173,7 +176,7 @@ class OptionBinder
           argument = "=<#{$~[:name]}>"
           argument = "=[#{argument[1..-1]}]" if style == :OPTIONAL
         else
-          argument = argument.sub(/\A(?:=\[|\[?=?)/, style == :OPTIONAL ? '=[' : '=')
+          argument.sub!(/\A(?:=\[|\[?=?)/, style == :OPTIONAL ? '=[' : '=')
         end
       end
 

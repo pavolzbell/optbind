@@ -31,8 +31,17 @@ describe OptBind do
   describe '#program' do
     let(:options) { OptBind.new }
 
-    it 'returns program name' do
-      expect(options.program).to eq 'meow'
+    context 'with PROGRAM' do
+      it 'returns custom name' do
+        stub_const 'PROGRAM', 'Meow'
+        expect(options.program).to eq 'Meow'
+      end
+    end
+
+    context 'without PROGRAM' do
+      it 'returns script name' do
+        expect(options.program).to eq 'meow'
+      end
     end
   end
 
@@ -40,7 +49,7 @@ describe OptBind do
     let(:options) { OptBind.new }
 
     context 'with VERSION' do
-      it 'returns program version' do
+      it 'returns custom version' do
         stub_const 'VERSION', '1.0.0'
         expect(options.version).to eq '1.0.0'
       end
