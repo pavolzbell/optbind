@@ -296,7 +296,8 @@ usage: meow [<options>]
   describe 'creating a binder and binding an option' do
     shared_examples_for 'create_and_bind' do
       it 'creates and binds' do
-        options = OptBind.new(target: target, bind: bind)
+        options = OptBind.new target: target, bind: bind
+
         expect(options.bound_defaults.key? :o).to be false
         expect(options.bound_variables.key? :o).to be false
         expect(options.assigned_variables.key? :o).to be false
@@ -328,11 +329,11 @@ usage: meow [<options>]
     context 'bound via #public_send' do
       include_examples 'create_and_bind' do
         let(:target) do
-          class Target
+          target_class = Class.new do
             attr_accessor :o
           end
 
-          Target.new.tap { |t| t.o = :STDOUT }
+          target_class.new.tap { |t| t.o = :STDOUT }
         end
 
         let(:bind) do
@@ -341,16 +342,30 @@ usage: meow [<options>]
       end
     end
 
+    context 'bound via #class_variables' do
+      include_examples 'create_and_bind' do
+        let(:target) do
+          Class.new do
+            class_variable_set :@@o, :STDOUT
+          end
+        end
+
+        let(:bind) do
+          :to_class_variables
+        end
+      end
+    end
+
     context 'bound via #instance_variables' do
       include_examples 'create_and_bind' do
         let(:target) do
-          class Target
+          target_class = Class.new do
             def initialize
               @o = :STDOUT
             end
           end
 
-          Target.new
+          target_class.new
         end
 
         let(:bind) do
@@ -361,12 +376,10 @@ usage: meow [<options>]
 
     context 'bound via #local_variables' do
       include_examples 'create_and_bind' do
-        o = :STDOUT
-
-        target = self.instance_eval { binding }
-
         let(:target) do
-          target
+          o = :STDOUT
+
+          self.instance_eval { binding }
         end
 
         let(:bind) do
@@ -422,11 +435,11 @@ usage: meow [<options>]
     context 'bound via #public_send' do
       include_examples 'read_and_write' do
         let(:target) do
-          class Target
+          target_class = Class.new do
             attr_accessor :o
           end
 
-          Target.new.tap { |t| t.o = :STDOUT }
+          target_class.new.tap { |t| t.o = :STDOUT }
         end
 
         let(:bind) do
@@ -439,16 +452,34 @@ usage: meow [<options>]
       end
     end
 
+    context 'bound via #class_variables' do
+      include_examples 'read_and_write' do
+        let(:target) do
+          Class.new do
+            class_variable_set :@@o, :STDOUT
+          end
+        end
+
+        let(:bind) do
+          :to_class_variables
+        end
+
+        let(:writer) do
+          -> (v, x) { target.class_variable_set "@@#{v}", x }
+        end
+      end
+    end
+
     context 'bound via #instance_variables' do
       include_examples 'read_and_write' do
         let(:target) do
-          class Target
+          target_class = Class.new do
             def initialize
               @o = :STDOUT
             end
           end
 
-          Target.new
+          target_class.new
         end
 
         let(:bind) do
@@ -465,7 +496,8 @@ usage: meow [<options>]
       include_examples 'read_and_write' do
         let(:target) do
           o = :STDOUT
-          target = self.instance_eval { binding }
+
+          self.instance_eval { binding }
         end
 
         let(:bind) do
@@ -513,11 +545,11 @@ usage: meow [<options>]
     context 'bound via #public_send' do
       include_examples 'parse' do
         let(:target) do
-          class Target
+          target_class = Class.new do
             attr_accessor :o
           end
 
-          Target.new.tap { |t| t.o = :STDOUT }
+          target_class.new.tap { |t| t.o = :STDOUT }
         end
 
         let(:bind) do
@@ -526,16 +558,30 @@ usage: meow [<options>]
       end
     end
 
+    context 'bound via #class_variables' do
+      include_examples 'parse' do
+        let(:target) do
+          Class.new do
+            class_variable_set :@@o, :STDOUT
+          end
+        end
+
+        let(:bind) do
+          :to_class_variables
+        end
+      end
+    end
+
     context 'bound via #instance_variables' do
       include_examples 'parse' do
         let(:target) do
-          class Target
+          target_class = Class.new do
             def initialize
               @o = :STDOUT
             end
           end
 
-          Target.new
+          target_class.new
         end
 
         let(:bind) do
@@ -548,7 +594,8 @@ usage: meow [<options>]
       include_examples 'parse' do
         let(:target) do
           o = :STDOUT
-          target = self.instance_eval { binding }
+
+          self.instance_eval { binding }
         end
 
         let(:bind) do

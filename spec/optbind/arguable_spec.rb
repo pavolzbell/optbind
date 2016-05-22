@@ -117,11 +117,11 @@ describe OptBind::Arguable do
       context 'automatically bind to #public_send' do
         include_examples 'parse_bound_option_and_argument' do
           let(:target) do
-            class Target
+            target_class = Class.new do
               attr_accessor :o, :i
             end
 
-            Target.new.tap { |t| t.o, t.i = :STDOUT, :STDIN }
+            target_class.new.tap { |t| t.o, t.i = :STDOUT, :STDIN }
           end
 
           let(:opts) do
@@ -130,16 +130,31 @@ describe OptBind::Arguable do
         end
       end
 
+      context 'bind: :to_class_variables' do
+        include_examples 'parse_bound_option_and_argument' do
+          let(:target) do
+            Class.new do
+              class_variable_set :@@o, :STDOUT
+              class_variable_set :@@i, :STDIN
+            end
+          end
+
+          let(:opts) do
+            { target: target, bind: :to_class_variables }
+          end
+        end
+      end
+
       context 'bind: :to_instance_variables' do
         include_examples 'parse_bound_option_and_argument' do
           let(:target) do
-            class Target
+            target_class = Class.new do
               def initialize
                 @o, @i = :STDOUT, :STDIN
               end
             end
 
-            Target.new
+            target_class.new
           end
 
           let(:opts) do
@@ -152,7 +167,8 @@ describe OptBind::Arguable do
         include_examples 'parse_bound_option_and_argument' do
           let(:target) do
             o, i = :STDOUT, :STDIN
-            target = self.instance_eval { binding }
+
+            self.instance_eval { binding }
           end
 
           let(:opts) do
@@ -165,7 +181,8 @@ describe OptBind::Arguable do
         include_examples 'parse_bound_option_and_argument' do
           let(:target) do
             o, i = :STDOUT, :STDIN
-            target = self.instance_eval { binding }
+
+            self.instance_eval { binding }
           end
 
           let(:opts) do
@@ -253,11 +270,11 @@ describe OptBind::Arguable do
       context 'automatically via #public_send' do
         include_examples 'parse_bound_option_and_argument' do
           let(:target) do
-            class Target
+            target_class = Class.new do
               attr_accessor :o, :i
             end
 
-            Target.new.tap { |t| t.o, t.i = :STDOUT, :STDIN }
+            target_class.new.tap { |t| t.o, t.i = :STDOUT, :STDIN }
           end
 
           let(:opts) do
@@ -266,16 +283,31 @@ describe OptBind::Arguable do
         end
       end
 
+      context 'via: :class_variables' do
+        include_examples 'parse_bound_option_and_argument' do
+          let(:target) do
+            Class.new do
+              class_variable_set :@@o, :STDOUT
+              class_variable_set :@@i, :STDIN
+            end
+          end
+
+          let(:opts) do
+            { to: target, via: :class_variables }
+          end
+        end
+      end
+
       context 'via: :instance_variables' do
         include_examples 'parse_bound_option_and_argument' do
           let(:target) do
-            class Target
+            target_class = Class.new do
               def initialize
                 @o, @i = :STDOUT, :STDIN
               end
             end
 
-            Target.new
+            target_class.new
           end
 
           let(:opts) do
@@ -288,7 +320,8 @@ describe OptBind::Arguable do
         include_examples 'parse_bound_option_and_argument' do
           let(:target) do
             o, i = :STDOUT, :STDIN
-            target = self.instance_eval { binding }
+
+            self.instance_eval { binding }
           end
 
           let(:opts) do
@@ -301,7 +334,8 @@ describe OptBind::Arguable do
         include_examples 'parse_bound_option_and_argument' do
           let(:target) do
             o, i = :STDOUT, :STDIN
-            target = self.instance_eval { binding }
+
+            self.instance_eval { binding }
           end
 
           let(:opts) do
