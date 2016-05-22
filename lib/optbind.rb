@@ -20,6 +20,8 @@ class OptionBinder
       return -> (v) { target.local_variable_get v }, -> (v, x) { target.local_variable_set v, x }
     when :to_instance_variables
       return -> (v) { target.instance_variable_get "@#{v}" }, -> (v, x) { target.instance_variable_set "@#{v}", x }
+    when :to_class_variables
+      return -> (v) { target.class_variable_get "@@#{v}" }, -> (v, x) { target.class_variable_set "@@#{v}", x }
     else
       return -> (v) { target[v] }, -> (v, x) { target[v] = x } if target.respond_to? :[]
       return -> (v) { target.public_send v }, -> (v, x) { target.public_send "#{v}=", x }
