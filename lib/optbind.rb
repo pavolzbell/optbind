@@ -47,8 +47,14 @@ class OptionBinder
   def_delegators :@parser, :abort, :warn
   def_delegators :@parser, :load
 
-  { order: '*argv, &blk', order!: 'argv', permute: '*argv', permute!: 'argv', parse: '*argv', parse!: 'argv' }.each do |m, a|
-    class_eval "def #{m} #{a}; @parser.#{m} #{a}; parse_args#{'!' if m =~ /!\z/} argv; rescue OptionParser::ParseError; @parser.abort; end", __FILE__, __LINE__
+  def parse(*argv)
+    @parser.parse *argv
+    parse_args argv
+  end
+
+  def parse!(argv)
+    @parser.parse! argv
+    parse_args! argv
   end
 
   def_delegators :@parser, :to_a, :to_s
@@ -76,11 +82,7 @@ class OptionBinder
     opts, handler, bound, variable, default = *several_variants(*opts, &handler)
 
     @parser.on(*opts) do |r|
-      if opts.include? :REQUIRED
-        a = opts.select { |o| o =~ /\A-/ }.sort_by { |o| o.length }[-1]
-        @parser.abort "missing argument: #{a}=" if !r || (r.respond_to?(:empty?) && r.empty?)
-      end
-
+      raise OptionParser::InvalidArgument if opts.include?(:REQUIRED) && (r.nil? || r.respond_to?(:empty?) && r.empty?)
       handle! handler, r, bound, variable, default
     end
 
@@ -160,7 +162,7 @@ class OptionBinder
     def self.parser_opts_from_string(string = '', &handler)
       string, shorts, longs = string.dup, [], []
 
-      while string.sub!(/\A(?:(?<short>-\w)\s+)/, '')
+      while string.sub!(/\A(?:(?<short>-\w)\s+)/, '') do
         shorts << $~[:short]
       end
 
@@ -280,14 +282,6 @@ class OptionBinder
 
     def parser
       self.options
-    end
-
-    def order!(&blk)
-      binder.order! self, &blk
-    end
-
-    def permute!
-      binder.permute! self
     end
 
     def parse!

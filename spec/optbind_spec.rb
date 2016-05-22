@@ -604,4 +604,63 @@ usage: meow [<options>]
       end
     end
   end
+
+  describe 'parsing a required option' do
+    let(:options) do
+      OptBind.new do |o|
+        o.opt '--output=<file>'
+        o.opt '--trim=<size:Integer>'
+      end
+    end
+
+    context 'with missing argument' do
+      it 'raises an error' do
+        expect { options.parse %w(--output) }.to raise_error OptionParser::MissingArgument, 'missing argument: --output'
+        expect { options.parse %w(--trim) }.to raise_error OptionParser::MissingArgument, 'missing argument: --trim'
+      end
+    end
+
+    context 'with invalid argument' do
+      it 'raises an error' do
+        expect { options.parse %w(--output=) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: --output='
+        expect { options.parse %w(--trim=) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: --trim='
+        expect { options.parse %w(--trim=?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: --trim=?'
+      end
+    end
+  end
+
+  describe 'parsing an optional option' do
+    let(:options) do
+      OptBind.new do |o|
+        o.opt '--output[=<file>]'
+        o.opt '--trim[=<count:Integer>]'
+      end
+    end
+
+    context 'with missing argument' do
+      it 'parses' do
+        expect { options.parse %w(--output) }.not_to raise_error
+        expect { options.parse %w(--trim) }.not_to raise_error
+      end
+    end
+
+    context 'with invalid argument' do
+      it 'raises an error' do
+        expect { options.parse %w(--trim=) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: --trim='
+        expect { options.parse %w(--trim=?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: --trim=?'
+      end
+    end
+  end
+
+  describe 'parsing an unknown option' do
+    let(:options) do
+      OptBind.new
+    end
+
+    it 'raises an error' do
+      expect { options.parse %w(--trim) }.to raise_error OptionParser::InvalidOption, 'invalid option: --trim'
+      expect { options.parse %w(--trim=) }.to raise_error OptionParser::InvalidOption, 'invalid option: --trim='
+      expect { options.parse %w(--trim=?) }.to raise_error OptionParser::InvalidOption, 'invalid option: --trim=?'
+    end
+  end
 end
