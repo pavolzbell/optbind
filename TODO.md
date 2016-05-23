@@ -1,10 +1,16 @@
 # TODOS
 
+  - move order and permute to separate package, required on demand
+  
   - `Switch#parser_opts_from_string` - support regexps with options, like `=<name:/[a-z]/i>`
   - `Switch#parser_opts_from_string` - support ranges, like `=<indent:0..8>`
-  - add default support for ranges on `OptionParser` level
-  - add support for `Module#class_variables`
-  - add type conversion and patterns for arguments
+  
+  - add custom type definitions to separate package, required on demand 
+  - add support for ranges on `OptionParser` level
+
+  - add optbind/handlers from extise as separate package, required on demand
+  - add optbind/defaults from extise as separate package, required on demand
+
   - make optional extensions for `OptionParser` monkey-patching `make_switch` to support hash-or-string-exclusive arguments 
 
 # IDEAS
@@ -17,10 +23,7 @@ gems:
   opt ???           enhances syntax            see syntax def below
   optargs           supoort for args            
 
-- store defaults and make them always accessible
-- support arguments? consider ARGF
-
-- bind API:
+bind API:
   must be uninvasive, i.e. must not affect #on in any way, must act as #parse, see example
   ARGV, OptionParser (options)
   example: ARGV.options { |o| o.on(...); o.bind ...; o.parse! }
