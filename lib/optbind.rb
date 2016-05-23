@@ -47,8 +47,8 @@ class OptionBinder
   def_delegators :@parser, :abort, :warn
   def_delegators :@parser, :load
 
-  def parse(*argv)
-    @parser.parse *argv
+  def parse(argv)
+    @parser.parse argv
     parse_args argv
   end
 
@@ -86,6 +86,7 @@ class OptionBinder
       handle! handler, r, bound, variable, default
     end
 
+    (@option_definitions ||= []) << { opts: opts, handler: handler, bound: bound, variable: variable }
     (@bound_variables_with_defaults ||= {})[variable] = default if bound
     self
   end
@@ -95,8 +96,9 @@ class OptionBinder
   def argument(*opts, &handler)
     opts, handler, bound, variable, default = *several_variants(*opts, &handler)
 
-    opts.each do |opt|
-      (opts << :MULTIPLE) and break if opt.to_s =~ /<\S+>\.{3}/
+    (@argument_parser ||= OptionParser.new).on(*(opts << "--#{(@argument_definitions || []).size}")) do |r|
+      raise OptionParser::InvalidArgument if opts.include?(:REQUIRED) && (r.nil? || r.respond_to?(:empty?) && r.empty?)
+      handle! handler, r, bound, variable, default
     end
 
     (@argument_definitions ||= []) << { opts: opts, handler: handler, bound: bound, variable: variable }
@@ -173,6 +175,7 @@ class OptionBinder
         next unless $~[:argument]
         argument = $~[:argument]
         style = argument =~ /\A=?[<(]/ ? :REQUIRED : :OPTIONAL
+        pattern = Array if argument =~ /\.{3}\]?\z/
         values = $~[:values].split('|') if argument =~ /(?:\[?=?|=\[)\((?<values>\S*)\)\]?/
 
         if values.nil? && argument =~ /(?:\[?=?|=\[)<(?<name>\S+):(?<pattern>\S+)>\]?/
@@ -212,22 +215,37 @@ class OptionBinder
 
   private :several_variants
 
+  class MissingArguments < OptionParser::ParseError
+    const_set :Reason, 'missing arguments'
+    alias_method :message, :reason
+    alias_method :to_s, :reason
+  end
+
+  class TooManyArguments < OptionParser::ParseError
+    const_set :Reason, 'too many arguments'
+    alias_method :message, :reason
+    alias_method :to_s, :reason
+  end
+
   def parse_args(argv)
     parse_args! argv.dup
   end
 
   def parse_args!(argv)
-    return argv unless @argument_definitions
-    @argument_definitions.each do |a|
-      default = (@bound_variables_with_defaults ||= {})[a[:variable]]
-      r = argv[0] ? argv.shift : default
-      r = ([r].flatten + argv.shift(argv.size)).compact if a[:opts].include? :MULTIPLE
-      @parser.abort 'missing arguments' if (r.nil? || (r.is_a?(Array) && r.empty?)) && a[:opts].include?(:REQUIRED)
-      handle! a[:handler], r, a[:bound], a[:variable], default
-      return argv if a[:opts].include? :MULTIPLE
+    return argv unless @argument_parser
+    k = @argument_definitions.find_index { |a| a[:opts].include? Array }
+    p = k ? argv[0...k].map { |r| [r] } << argv[k..-1] : argv.map { |r| [r] }
+    p = (p.empty? ? p << [] : p).each_with_index.map do |r, i|
+      a = @argument_definitions[i]
+      raise TooManyArguments unless a
+      raise MissingArguments if a[:opts].include?(:REQUIRED) && r.empty?
+      "--#{i}=#{r * ','}" if a[:opts].include?(:REQUIRED) || !(r.empty? || r.find(&:empty?))
     end
-    @parser.abort 'too many arguments' if argv[0]
+    @argument_parser.order! p
+    argv.shift argv.size - p.size
     argv
+  rescue OptionParser::InvalidArgument
+    raise $!.tap { |e| e.args[0] = e.args[0].sub(/\A--\d+=/, '') }
   end
 
   private :parse_args, :parse_args!
