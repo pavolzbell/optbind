@@ -1,3 +1,21 @@
+## 0.4.0
+
+*   Support binding options to class variables
+
+*   Support argument patterns and types, make argument processing in fact same as option processing 
+
+*   Enable setting program name via constant and set both program name and version for both default and supplied parsers
+
+*   Enable non-destructive parsing for ARGV
+
+*   Raise an error on parsing failure instead of totally aborting execution 
+
+*   Remove `order` and `permute` methods
+
+*   Conform to Ruby 2.3 and frozen strings 
+
+    *Pavol Zbell*
+
 ## 0.3.2
 
 *   Fix handling of blanks as array arguments 
