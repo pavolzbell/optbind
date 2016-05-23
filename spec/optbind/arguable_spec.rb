@@ -26,6 +26,7 @@ describe OptBind::Arguable do
   end
 
   let (:already_parsed) { false }
+  let (:destructive_approach) { false }
 
   shared_examples_for 'define_bound_option_and_argument' do |define|
     it 'defines bound option and argument' do
@@ -38,17 +39,29 @@ describe OptBind::Arguable do
 
   shared_examples_for 'parse_bound_option_and_argument' do
     it 'parses bound option and argument' do
+      argv_copy = argv.dup
+
       unless already_parsed
         expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
         expect(argv.binder.bound_variables).to eq(o: :STDOUT, i: :STDIN)
         expect(argv.binder.assigned_variables).to eq({})
-        expect(argv.parse!).to eq []
+
+        if destructive_approach
+          expect(argv.parse!).to eq []
+        else
+          expect(argv.parse).to eq argv
+        end
       end
 
       expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
       expect(argv.binder.bound_variables).to eq(o: 'file.out', i: 'file.in')
       expect(argv.binder.assigned_variables).to eq(o: 'file.out', i: 'file.in')
-      expect(argv).to eq []
+
+      if destructive_approach
+        expect(argv).to eq []
+      else
+        expect(argv).to eq argv_copy
+      end
     end
   end
 
@@ -374,6 +387,8 @@ describe OptBind::Arguable do
     end
   end
 
+  # define
+
   describe '#define' do
     include_examples 'define_variants'
   end
@@ -381,6 +396,8 @@ describe OptBind::Arguable do
   describe '#define' do
     include_examples 'define_with_target'
   end
+
+  # bind
 
   describe '#bind' do
     include_examples 'bind_variants'
@@ -393,6 +410,8 @@ describe OptBind::Arguable do
   describe '#bind' do
     include_examples 'bind_to_locals'
   end
+
+  # define_and_bind
 
   describe '#define_and_bind' do
     include_examples 'bind_variants', :define_and_bind
@@ -410,28 +429,69 @@ describe OptBind::Arguable do
     include_examples 'bind_to_locals', :define_and_bind
   end
 
+  # define_and_parse
+
+  describe '#define_and_parse' do
+    include_examples 'define_variants', :define_and_parse
+  end
+
+  describe '#define_and_parse' do
+    let (:already_parsed) { true }
+
+    include_examples 'define_with_target', :define_and_parse
+  end
+
+  # bind_and_parse
+
+  describe '#bind_and_parse' do
+    include_examples 'define_variants', :bind_and_parse
+  end
+
+  describe '#bind_and_parse' do
+    let (:already_parsed) { true }
+
+    include_examples 'bind_to_target', :bind_and_parse
+  end
+
+  describe '#bind_and_parse' do
+    let (:already_parsed) { true }
+
+    include_examples 'bind_to_locals', :bind_and_parse
+  end
+
+  # define_and_parse!
+
   describe '#define_and_parse!' do
+    let (:destructive_approach) { true }
+
     include_examples 'define_variants', :define_and_parse!
   end
 
   describe '#define_and_parse!' do
     let (:already_parsed) { true }
+    let (:destructive_approach) { true }
 
     include_examples 'define_with_target', :define_and_parse!
   end
 
+  # bind_and_parse!
+
   describe '#bind_and_parse!' do
+    let (:destructive_approach) { true }
+
     include_examples 'define_variants', :bind_and_parse!
   end
 
   describe '#bind_and_parse!' do
     let (:already_parsed) { true }
+    let (:destructive_approach) { true }
 
     include_examples 'bind_to_target', :bind_and_parse!
   end
 
   describe '#bind_and_parse!' do
     let (:already_parsed) { true }
+    let (:destructive_approach) { true }
 
     include_examples 'bind_to_locals', :bind_and_parse!
   end

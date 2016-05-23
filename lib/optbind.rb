@@ -48,13 +48,11 @@ class OptionBinder
   def_delegators :@parser, :load
 
   def parse(argv)
-    @parser.parse argv
-    parse_args argv
+    parse!(argv.dup) and argv
   end
 
   def parse!(argv)
-    @parser.parse! argv
-    parse_args! argv
+    parse_args! @parser.parse! argv
   end
 
   def_delegators :@parser, :to_a, :to_s
@@ -227,10 +225,6 @@ class OptionBinder
     alias_method :to_s, :reason
   end
 
-  def parse_args(argv)
-    parse_args! argv.dup
-  end
-
   def parse_args!(argv)
     return argv unless @argument_parser
     k = @argument_definitions.find_index { |a| a[:opts].include? Array }
@@ -248,7 +242,7 @@ class OptionBinder
     raise $!.tap { |e| e.args[0] = e.args[0].sub(/\A--\d+=/, '') }
   end
 
-  private :parse_args, :parse_args!
+  private :parse_args!
 
   def handle!(handler, raw, bound, variable, default)
     (handler || -> (r) { r }).call(raw == nil ? default : raw).tap do |x|
@@ -291,15 +285,24 @@ class OptionBinder
     alias_method :define_and_bind, :binder
     alias_method :bind, :binder
 
+    def define_and_parse(opts = {}, &blk)
+      define(opts, &blk) and parse
+    end
+
+    alias_method :bind_and_parse, :define_and_parse
+
     def define_and_parse!(opts = {}, &blk)
-      define opts, &blk
-      parse!
+      define(opts, &blk) and parse!
     end
 
     alias_method :bind_and_parse!, :define_and_parse!
 
     def parser
       self.options
+    end
+
+    def parse
+      binder.parse self
     end
 
     def parse!
