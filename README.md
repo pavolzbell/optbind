@@ -64,7 +64,7 @@ See specs for more examples and details on usage.
 
 ### Bindings
 
-Various binding options include:   
+Various binding possibilities include:   
 
 #### Bind to `Hash` object
 
@@ -122,6 +122,8 @@ end
 
 #### Bind to class variables
 
+Create target:
+
 ```ruby
 class Options
   @@input, @@output = STDIN, STDOUT
@@ -147,6 +149,8 @@ end
 ```
 
 #### Bind to instance variables
+
+Create target:
 
 ```ruby
 class Options
@@ -176,6 +180,8 @@ end
 
 #### Bind to local variables
 
+Create target:
+
 ```ruby
 input, output = STDIN, STDOUT
 ```
@@ -188,6 +194,14 @@ OptionBinder.new(target: TOPLEVEL_BINDING, bind: :to_local_variables) do
 end
 ```
 
+Use `OptionBinder` directly with top level binding object as target by default:
+
+```ruby
+OptionBinder.new do
+  # ...
+end
+```
+
 Use `ARGV` shortcut:
 
 ```ruby
@@ -196,7 +210,7 @@ ARGV.define_and_bind(to: TOPLEVEL_BINDING, via: :local_variables) do
 end  
 ```
 
-or
+Use `ARGV` shortcut with top level binding object as target by default:
 
 ```ruby
 ARGV.define_and_bind(to: :locals) do
