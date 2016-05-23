@@ -21,7 +21,7 @@ Bind local variables to `ARGV` and parse command line arguments:
 ```ruby
 require 'optbind'
 
-ARGV                                         #=> ['--no-verbose', '-o', 'file.out', 'file.in'] 
+ARGV                                         #=> ['--no-verbose', '-o', 'file.out', 'file.in']
 
 i, o, v = STDIN, STDOUT, true
 
@@ -32,6 +32,8 @@ ARGV.bind_and_parse! to: :locals do
   opt 'v -v --[no-]verbose'
   arg 'i [<file>]'
 end
+
+ARGV                                         #=> []
 
 [i, o, v]                                    #=> ['file.in', 'file.out', false]
 ```
