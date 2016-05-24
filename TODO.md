@@ -5,7 +5,9 @@
   - `Switch#parser_opts_from_string` - support regexps with options, like `=<name:/[a-z]/i>`
   - `Switch#parser_opts_from_string` - support ranges, like `=<indent:0..8>`
   
-  - add custom type definitions to separate package, required on demand 
+  - add custom type definitions to separate package, required on demand
+  - add support for arrays of int -> <x:Array:Integer> and <x:Integer>... 
+  - add support for all OptParse types! -> test
   - add support for ranges on `OptionParser` level
 
   - add optbind/handlers from extise as separate package, required on demand

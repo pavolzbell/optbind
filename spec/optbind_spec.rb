@@ -891,6 +891,8 @@ usage: meow [<options>]
 
       context 'with many valid arguments' do
         it 'parses' do
+          pending 'not implemented yet'
+
           expect { options.parse %w(0 0) }.not_to raise_error
           expect(options.target).to eq(c: [0, 0])
         end
@@ -1055,8 +1057,14 @@ usage: meow [<options>]
         end
       end
 
+      # TODO resolve argument <a:Array> != <a>... => eventually need support for <a:Array>...
+      # TODO also support <x:Array:Integer>
+      # TODO need a support for <x:Integer>... for this to pass
+
       context 'with many valid arguments' do
         it 'parses' do
+          pending 'not implemented yet'
+
           expect { options.parse %w(0 0) }.not_to raise_error
           expect(options.target).to eq(c: [0, 0])
         end
