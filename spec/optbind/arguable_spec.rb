@@ -44,7 +44,7 @@ describe OptBind::Arguable do
       unless already_parsed
         expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
         expect(argv.binder.bound_variables).to eq(o: :STDOUT, i: :STDIN)
-        expect(argv.binder.assigned_variables).to eq({})
+        expect(argv.binder.assigned_variables).to be_empty
 
         if destructive_approach
           expect(argv.parse!).to eq []

@@ -11,12 +11,12 @@ describe OptBind do
 
         expect(options).to be_an_instance_of OptionBinder
         expect(options.parser).to be_an_instance_of OptionParser
-        expect(options.target).to be_an_instance_of Binding
+        expect(options.target).to eq TOPLEVEL_BINDING
       end
     end
 
     context 'with custom parser and target' do
-      let(:parser) { OptionParser.new }
+      let(:parser) { OptParse.new }
       let(:target) { Object.new }
 
       it 'creates an instance' do
@@ -337,7 +337,7 @@ usage: meow [<options>]
         end
 
         let(:bind) do
-          false
+          nil
         end
       end
     end
@@ -398,7 +398,7 @@ usage: meow [<options>]
 
         expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: :STDOUT)
-        expect(options.assigned_variables).to eq({})
+        expect(options.assigned_variables).to be_empty
         write_through options, :o, :STDERR
         expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: :STDERR)
@@ -443,7 +443,7 @@ usage: meow [<options>]
         end
 
         let(:bind) do
-          false
+          nil
         end
 
         let(:writer) do
@@ -516,7 +516,7 @@ usage: meow [<options>]
       it 'parses' do
         expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: :STDOUT)
-        expect(options.assigned_variables).to eq({})
+        expect(options.assigned_variables).to be_empty
         expect(options.parse %w(--output=file.out)).to contain_exactly('--output=file.out')
         expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: 'file.out')
@@ -607,8 +607,8 @@ usage: meow [<options>]
 
   describe 'parsing a required option' do
     let(:options) do
-      OptBind.new do |o|
-        o.opt '--output=<file>'
+      OptBind.new target: {} do |o|
+        o.opt 'o --output=<file>'
       end
     end
 
@@ -624,10 +624,17 @@ usage: meow [<options>]
       end
     end
 
+    context 'with present argument' do
+      it 'parses' do
+        expect { options.parse %w(--output=?) }.not_to raise_error
+        expect(options.target).to eq(o: '?')
+      end
+    end
+
     context 'defining a pattern' do
       let(:options) do
-        OptBind.new do |o|
-          o.opt '--trim=<size:Integer>'
+        OptBind.new target: {} do |o|
+          o.opt 't --trim=<size:Integer>'
         end
       end
 
@@ -648,38 +655,55 @@ usage: meow [<options>]
           expect { options.parse %w(--trim=?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: --trim=?'
         end
       end
+
+      context 'with valid argument' do
+        it 'parses' do
+          expect { options.parse %w(--trim=0) }.not_to raise_error
+          expect(options.target).to eq(t: 0)
+        end
+      end
     end
   end
 
   describe 'parsing an optional option' do
     let(:options) do
-      OptBind.new do |o|
-        o.opt '--output[=<file>]'
+      OptBind.new target: {} do |o|
+        o.opt 'o --output[=<file>]'
       end
     end
 
     context 'with missing argument' do
       it 'parses' do
         expect { options.parse %w(--output) }.not_to raise_error
+        expect(options.target).to eq(o: true)
       end
     end
 
     context 'with empty argument' do
       it 'parses' do
         expect { options.parse %w(--output=) }.not_to raise_error
+        expect(options.target).to eq(o: '')
+      end
+    end
+
+    context 'with present argument' do
+      it 'parses' do
+        expect { options.parse %w(--output=?) }.not_to raise_error
+        expect(options.target).to eq(o: '?')
       end
     end
 
     context 'defining a pattern' do
       let(:options) do
-        OptBind.new do |o|
-          o.opt '--trim[=<count:Integer>]'
+        OptBind.new target: {} do |o|
+          o.opt 't --trim[=<count:Integer>]'
         end
       end
 
       context 'with missing argument' do
         it 'parses' do
           expect { options.parse %w(--trim) }.not_to raise_error
+          expect(options.target).to eq(t: nil)
         end
       end
 
@@ -694,12 +718,19 @@ usage: meow [<options>]
           expect { options.parse %w(--trim=?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: --trim=?'
         end
       end
+
+      context 'with valid argument' do
+        it 'parses' do
+          expect { options.parse %w(--trim=0) }.not_to raise_error
+          expect(options.target).to eq(t: 0)
+        end
+      end
     end
   end
 
   describe 'parsing an unknown option' do
     let(:options) do
-      OptBind.new
+      OptBind.new target: {}
     end
 
     it 'raises an error' do
@@ -711,8 +742,8 @@ usage: meow [<options>]
 
   describe 'parsing a required argument' do
     let(:options) do
-      OptBind.new do |o|
-        o.arg '<file>'
+      OptBind.new target: {} do |o|
+        o.arg 'f <file>'
       end
     end
 
@@ -728,7 +759,14 @@ usage: meow [<options>]
       end
     end
 
-    context 'with too many arguments' do
+    context 'with one argument' do
+      it 'parses' do
+        expect { options.parse %w(?) }.not_to raise_error
+        expect(options.target).to eq(f: '?')
+      end
+    end
+
+    context 'with many arguments' do
       it 'raises an error' do
         expect { options.parse %w(? ?) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
       end
@@ -736,8 +774,8 @@ usage: meow [<options>]
 
     context 'defining a pattern' do
       let(:options) do
-        OptBind.new do |o|
-          o.arg '<count:Integer>'
+        OptBind.new target: {} do |o|
+          o.arg 'c <count:Integer>'
         end
       end
 
@@ -753,23 +791,70 @@ usage: meow [<options>]
         end
       end
 
-      context 'with invalid argument' do
+      context 'with one invalid argument' do
         it 'raises an error' do
           expect { options.parse %w(?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: ?'
         end
       end
 
-      context 'with too many arguments' do
+      context 'with one valid argument' do
+        it 'parses' do
+          expect { options.parse %w(0) }.not_to raise_error
+          expect(options.target).to eq(c: 0)
+        end
+      end
+
+      context 'with many invalid arguments' do
         it 'raises an error' do
           expect { options.parse %w(? ?) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
         end
       end
+
+      context 'with many valid arguments' do
+        it 'raises an error' do
+          expect { options.parse %w(0 0) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
+        end
+      end
+    end
+  end
+
+  describe 'parsing a required argument of variable length' do
+    let(:options) do
+      OptBind.new target: {} do |o|
+        o.arg 'f <file>...'
+      end
     end
 
-    context 'defining variable length' do
+    context 'with missing argument' do
+      it 'raises an error' do
+        expect { options.parse [] }.to raise_error OptionBinder::MissingArguments, 'missing arguments'
+      end
+    end
+
+    context 'with empty argument' do
+      it 'raises an error' do
+        expect { options.parse [''] }.to raise_error OptionParser::InvalidArgument, 'invalid argument: '
+      end
+    end
+
+    context 'with one argument' do
+      it 'parses' do
+        expect { options.parse %w(?) }.not_to raise_error
+        expect(options.target).to eq(f: %w(?))
+      end
+    end
+
+    context 'with many arguments' do
+      it 'parses' do
+        expect { options.parse %w(? ?) }.not_to raise_error
+        expect(options.target).to eq(f: %w(? ?))
+      end
+    end
+
+    context 'defining a pattern' do
       let(:options) do
-        OptBind.new do |o|
-          o.arg '<file>...'
+        OptBind.new target: {} do |o|
+          o.arg 'c <count:Integer>...'
         end
       end
 
@@ -785,15 +870,29 @@ usage: meow [<options>]
         end
       end
 
-      context 'with one argument' do
-        it 'parses' do
-          expect { options.parse %w(?) }.not_to raise_error
+      context 'with one invalid argument' do
+        it 'raises an error' do
+          expect { options.parse %w(?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: ?'
         end
       end
 
-      context 'with many arguments' do
+      context 'with one valid argument' do
         it 'parses' do
-          expect { options.parse %w(? ?) }.not_to raise_error
+          expect { options.parse %w(0) }.not_to raise_error
+          expect(options.target).to eq(c: 0)
+        end
+      end
+
+      context 'with many invalid arguments' do
+        it 'raises an error' do
+          expect { options.parse %w(? ?) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
+        end
+      end
+
+      context 'with many valid arguments' do
+        it 'parses' do
+          expect { options.parse %w(0 0) }.not_to raise_error
+          expect(options.target).to eq(c: [0, 0])
         end
       end
     end
@@ -801,24 +900,33 @@ usage: meow [<options>]
 
   describe 'parsing an optional argument' do
     let(:options) do
-      OptBind.new do |o|
-        o.arg '[<file>]'
+      OptBind.new target: {} do |o|
+        o.arg 'f [<file>]'
       end
     end
 
     context 'with missing argument' do
       it 'parses' do
         expect { options.parse [] }.not_to raise_error
+        expect(options.target).to be_empty
       end
     end
 
     context 'with empty argument' do
       it 'parses' do
         expect { options.parse [''] }.not_to raise_error
+        expect(options.target).to be_empty
       end
     end
 
-    context 'with too many arguments' do
+    context 'with one argument' do
+      it 'parses' do
+        expect { options.parse %w(?) }.not_to raise_error
+        expect(options.target).to eq(f: '?')
+      end
+    end
+
+    context 'with many arguments' do
       it 'raises an error' do
         expect { options.parse %w(? ?) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
       end
@@ -826,64 +934,131 @@ usage: meow [<options>]
 
     context 'defining a pattern' do
       let(:options) do
-        OptBind.new do |o|
-          o.arg '[<count:Integer>]'
+        OptBind.new target: {} do |o|
+          o.arg 'c [<count:Integer>]'
         end
       end
 
       context 'with missing argument' do
         it 'parses' do
           expect { options.parse [] }.not_to raise_error
+          expect(options.target).to be_empty
         end
       end
 
       context 'with empty argument' do
         it 'parses' do
           expect { options.parse [''] }.not_to raise_error
+          expect(options.target).to be_empty
         end
       end
 
-      context 'with invalid argument' do
+      context 'with one invalid argument' do
         it 'raises an error' do
           expect { options.parse %w(?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: ?'
         end
       end
 
-      context 'with too many arguments' do
+      context 'with one valid argument' do
+        it 'parses' do
+          expect { options.parse %w(0) }.not_to raise_error
+          expect(options.target).to eq(c: 0)
+        end
+      end
+
+      context 'with many invalid arguments' do
         it 'raises an error' do
           expect { options.parse %w(? ?) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
         end
       end
+
+      context 'with many valid arguments' do
+        it 'raises an error' do
+          expect { options.parse %w(0 0) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
+        end
+      end
+    end
+  end
+
+  describe 'parsing an optional argument of variable length' do
+    let(:options) do
+      OptBind.new target: {} do |o|
+        o.arg 'f [<file>...]'
+      end
     end
 
-    context 'defining variable length' do
+    context 'with missing argument' do
+      it 'raises an error' do
+        expect { options.parse [] }.not_to raise_error
+        expect(options.target).to be_empty
+      end
+    end
+
+    context 'with empty argument' do
+      it 'raises an error' do
+        expect { options.parse [''] }.not_to raise_error
+        expect(options.target).to be_empty
+      end
+    end
+
+    context 'with one argument' do
+      it 'parses' do
+        expect { options.parse %w(?) }.not_to raise_error
+        expect(options.target).to eq(f: %w(?))
+      end
+    end
+
+    context 'with many arguments' do
+      it 'parses' do
+        expect { options.parse %w(? ?) }.not_to raise_error
+        expect(options.target).to eq(f: %w(? ?))
+      end
+    end
+
+    context 'defining a pattern' do
       let(:options) do
-        OptBind.new do |o|
-          o.arg '[<file>...]'
+        OptBind.new target: {} do |o|
+          o.arg 'c [<count:Integer>...]'
         end
       end
 
       context 'with missing argument' do
-        it 'raises an error' do
+        it 'parses' do
           expect { options.parse [] }.not_to raise_error
+          expect(options.target).to be_empty
         end
       end
 
       context 'with empty argument' do
-        it 'raises an error' do
+        it 'parses' do
           expect { options.parse [''] }.not_to raise_error
+          expect(options.target).to be_empty
         end
       end
 
-      context 'with one argument' do
-        it 'parses' do
-          expect { options.parse %w(?) }.not_to raise_error
+      context 'with one invalid argument' do
+        it 'raises an error' do
+          expect { options.parse %w(?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: ?'
         end
       end
 
-      context 'with many arguments' do
+      context 'with one valid argument' do
         it 'parses' do
-          expect { options.parse %w(? ?) }.not_to raise_error
+          expect { options.parse %w(0) }.not_to raise_error
+          expect(options.target).to eq(c: 0)
+        end
+      end
+
+      context 'with many invalid arguments' do
+        it 'raises an error' do
+          expect { options.parse %w(? ?) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
+        end
+      end
+
+      context 'with many valid arguments' do
+        it 'parses' do
+          expect { options.parse %w(0 0) }.not_to raise_error
+          expect(options.target).to eq(c: [0, 0])
         end
       end
     end
