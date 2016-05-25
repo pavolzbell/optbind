@@ -39,7 +39,7 @@ describe OptBind::Arguable do
 
   shared_examples_for 'parse_bound_option_and_argument' do
     it 'parses bound option and argument' do
-      argv_copy = argv.dup
+      orig = argv.dup
 
       unless already_parsed
         expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
@@ -47,9 +47,11 @@ describe OptBind::Arguable do
         expect(argv.binder.assigned_variables).to be_empty
 
         if destructive_approach
-          expect(argv.parse!).to eq []
+          expect(argv.parse!).to be_empty
+          expect(argv).to be_empty
         else
-          expect(argv.parse).to eq argv
+          expect(argv.parse).to be_empty
+          expect(argv).to eq orig
         end
       end
 
@@ -58,9 +60,9 @@ describe OptBind::Arguable do
       expect(argv.binder.assigned_variables).to eq(o: 'file.out', i: 'file.in')
 
       if destructive_approach
-        expect(argv).to eq []
+        expect(argv).to be_empty
       else
-        expect(argv).to eq argv_copy
+        expect(argv).to eq orig
       end
     end
   end

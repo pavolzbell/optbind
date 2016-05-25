@@ -514,10 +514,14 @@ usage: meow [<options>]
   describe 'parsing a bound option' do
     shared_examples_for 'parse' do
       it 'parses' do
+        argv = %w(--output=file.out master)
+        orig = argv.dup
+
         expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: :STDOUT)
         expect(options.assigned_variables).to be_empty
-        expect(options.parse %w(--output=file.out)).to contain_exactly('--output=file.out')
+        expect(options.parse argv).to contain_exactly('master')
+        expect(argv).to eq orig
         expect(options.bound_defaults).to eq(o: :STDOUT)
         expect(options.bound_variables).to eq(o: 'file.out')
         expect(options.assigned_variables).to eq(o: 'file.out')
@@ -626,7 +630,7 @@ usage: meow [<options>]
 
     context 'with present argument' do
       it 'parses' do
-        expect { options.parse %w(--output=?) }.not_to raise_error
+        options.parse %w(--output=?)
         expect(options.target).to eq(o: '?')
       end
     end
@@ -658,7 +662,7 @@ usage: meow [<options>]
 
       context 'with valid argument' do
         it 'parses' do
-          expect { options.parse %w(--trim=0) }.not_to raise_error
+          options.parse %w(--trim=0)
           expect(options.target).to eq(t: 0)
         end
       end
@@ -674,21 +678,21 @@ usage: meow [<options>]
 
     context 'with missing argument' do
       it 'parses' do
-        expect { options.parse %w(--output) }.not_to raise_error
+        options.parse %w(--output)
         expect(options.target).to eq(o: true)
       end
     end
 
     context 'with empty argument' do
       it 'parses' do
-        expect { options.parse %w(--output=) }.not_to raise_error
+        options.parse %w(--output=)
         expect(options.target).to eq(o: '')
       end
     end
 
     context 'with present argument' do
       it 'parses' do
-        expect { options.parse %w(--output=?) }.not_to raise_error
+        options.parse %w(--output=?)
         expect(options.target).to eq(o: '?')
       end
     end
@@ -702,7 +706,7 @@ usage: meow [<options>]
 
       context 'with missing argument' do
         it 'parses' do
-          expect { options.parse %w(--trim) }.not_to raise_error
+          options.parse %w(--trim)
           expect(options.target).to eq(t: nil)
         end
       end
@@ -721,7 +725,7 @@ usage: meow [<options>]
 
       context 'with valid argument' do
         it 'parses' do
-          expect { options.parse %w(--trim=0) }.not_to raise_error
+          options.parse %w(--trim=0)
           expect(options.target).to eq(t: 0)
         end
       end
@@ -761,7 +765,7 @@ usage: meow [<options>]
 
     context 'with one argument' do
       it 'parses' do
-        expect { options.parse %w(?) }.not_to raise_error
+        options.parse %w(?)
         expect(options.target).to eq(f: '?')
       end
     end
@@ -799,7 +803,7 @@ usage: meow [<options>]
 
       context 'with one valid argument' do
         it 'parses' do
-          expect { options.parse %w(0) }.not_to raise_error
+          options.parse %w(0)
           expect(options.target).to eq(c: 0)
         end
       end
@@ -839,14 +843,14 @@ usage: meow [<options>]
 
     context 'with one argument' do
       it 'parses' do
-        expect { options.parse %w(?) }.not_to raise_error
+        options.parse %w(?)
         expect(options.target).to eq(f: %w(?))
       end
     end
 
     context 'with many arguments' do
       it 'parses' do
-        expect { options.parse %w(? ?) }.not_to raise_error
+        options.parse %w(? ?)
         expect(options.target).to eq(f: %w(? ?))
       end
     end
@@ -878,7 +882,7 @@ usage: meow [<options>]
 
       context 'with one valid argument' do
         it 'parses' do
-          expect { options.parse %w(0) }.not_to raise_error
+          options.parse %w(0)
           expect(options.target).to eq(c: 0)
         end
       end
@@ -893,7 +897,7 @@ usage: meow [<options>]
         it 'parses' do
           pending 'not implemented yet'
 
-          expect { options.parse %w(0 0) }.not_to raise_error
+          options.parse %w(0 0)
           expect(options.target).to eq(c: [0, 0])
         end
       end
@@ -909,21 +913,21 @@ usage: meow [<options>]
 
     context 'with missing argument' do
       it 'parses' do
-        expect { options.parse [] }.not_to raise_error
+        options.parse []
         expect(options.target).to be_empty
       end
     end
 
     context 'with empty argument' do
       it 'parses' do
-        expect { options.parse [''] }.not_to raise_error
+        options.parse ['']
         expect(options.target).to be_empty
       end
     end
 
     context 'with one argument' do
       it 'parses' do
-        expect { options.parse %w(?) }.not_to raise_error
+        options.parse %w(?)
         expect(options.target).to eq(f: '?')
       end
     end
@@ -943,14 +947,14 @@ usage: meow [<options>]
 
       context 'with missing argument' do
         it 'parses' do
-          expect { options.parse [] }.not_to raise_error
+          options.parse []
           expect(options.target).to be_empty
         end
       end
 
       context 'with empty argument' do
         it 'parses' do
-          expect { options.parse [''] }.not_to raise_error
+          options.parse ['']
           expect(options.target).to be_empty
         end
       end
@@ -963,7 +967,7 @@ usage: meow [<options>]
 
       context 'with one valid argument' do
         it 'parses' do
-          expect { options.parse %w(0) }.not_to raise_error
+          options.parse %w(0)
           expect(options.target).to eq(c: 0)
         end
       end
@@ -991,28 +995,28 @@ usage: meow [<options>]
 
     context 'with missing argument' do
       it 'raises an error' do
-        expect { options.parse [] }.not_to raise_error
+        options.parse []
         expect(options.target).to be_empty
       end
     end
 
     context 'with empty argument' do
       it 'raises an error' do
-        expect { options.parse [''] }.not_to raise_error
+        options.parse ['']
         expect(options.target).to be_empty
       end
     end
 
     context 'with one argument' do
       it 'parses' do
-        expect { options.parse %w(?) }.not_to raise_error
+        options.parse %w(?)
         expect(options.target).to eq(f: %w(?))
       end
     end
 
     context 'with many arguments' do
       it 'parses' do
-        expect { options.parse %w(? ?) }.not_to raise_error
+        options.parse %w(? ?)
         expect(options.target).to eq(f: %w(? ?))
       end
     end
@@ -1026,14 +1030,14 @@ usage: meow [<options>]
 
       context 'with missing argument' do
         it 'parses' do
-          expect { options.parse [] }.not_to raise_error
+          options.parse []
           expect(options.target).to be_empty
         end
       end
 
       context 'with empty argument' do
         it 'parses' do
-          expect { options.parse [''] }.not_to raise_error
+          options.parse ['']
           expect(options.target).to be_empty
         end
       end
@@ -1046,7 +1050,7 @@ usage: meow [<options>]
 
       context 'with one valid argument' do
         it 'parses' do
-          expect { options.parse %w(0) }.not_to raise_error
+          options.parse %w(0)
           expect(options.target).to eq(c: 0)
         end
       end
@@ -1065,7 +1069,7 @@ usage: meow [<options>]
         it 'parses' do
           pending 'not implemented yet'
 
-          expect { options.parse %w(0 0) }.not_to raise_error
+          options.parse %w(0 0)
           expect(options.target).to eq(c: [0, 0])
         end
       end

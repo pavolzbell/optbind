@@ -45,17 +45,16 @@ class OptionBinder
 
   def_delegators :@parser, :accept, :reject
   def_delegators :@parser, :abort, :warn
-  def_delegators :@parser, :load
+  def_delegators :@parser, :environment, :load
+  def_delegators :@parser, :to_a, :to_s
 
-  def parse(argv)
-    parse!(argv.dup) and argv
+  def parse(*argv)
+    parse! argv.dup.flatten
   end
 
-  def parse!(argv)
+  def parse!(argv = parser.default_argv)
     parse_args! @parser.parse! argv
   end
-
-  def_delegators :@parser, :to_a, :to_s
 
   def_delegator :@parser, :program_name, :program
   def_delegator :@parser, :version
