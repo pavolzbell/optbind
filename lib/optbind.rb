@@ -195,8 +195,9 @@ class OptionBinder
     if opts.size == 1
       case opts[0]
       when Hash
-        hash, variable = opts[0], [hash.delete(:variable), hash.delete(:bind)].compact[0]
-        bound = !(opts[:bound] === false) && !!variable
+        hash = opts[0].dup
+        variable = hash.delete(:variable) || hash.delete(:bind)
+        bound = !(opts.delete(:bound) === false) && !!variable
         default = hash.delete(:default) || (@reader.call(variable.to_sym) if variable)
         opts, handler = Switch.parser_opts_from_hash hash, &handler
       when String
