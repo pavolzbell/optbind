@@ -254,13 +254,14 @@ class OptionBinder
   private :handle!
 
   module Arguable
+    def self.extend_object(o)
+      super
+      return unless o.singleton_class.included_modules.include? OptionParser::Arguable
+      %i(order! permute!).each { |m| o.define_singleton_method(m) { raise 'unsupported' }}
+    end
+
     def binder=(bind)
-      unless @optbind = bind
-        class << self
-          undef_method(:binder)
-          undef_method(:binder=)
-        end
-      end
+      @optbind = bind
     end
 
     def binder(opts = {}, &blk)
@@ -275,10 +276,15 @@ class OptionBinder
         @optbind = OptionBinder.new parser: opts[:parser], target: target, bind: bind
       end
 
+      @optbind.parser.default_argv = self
       @optbind.instance_eval &blk if blk
-      self.options = @optbind.parser
+      self.options = @optbind.parser if respond_to? :options=
       @optbind
     end
+
+    extend Forwardable
+
+    def_delegators :binder, :parser, :target
 
     alias_method :define, :binder
     alias_method :define_and_bind, :binder
@@ -296,10 +302,6 @@ class OptionBinder
 
     alias_method :bind_and_parse!, :define_and_parse!
 
-    def parser
-      self.options
-    end
-
     def parse
       binder.parse self
     end
@@ -313,3 +315,5 @@ end
 ARGV.extend(OptionBinder::Arguable)
 
 OptBind = OptionBinder
+
+require 'optbind/version'

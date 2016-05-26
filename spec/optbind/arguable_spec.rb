@@ -1,32 +1,79 @@
 require 'spec_helper'
 
 describe OptBind::Arguable do
+  let (:already_parsed) { false }
+  let (:destructive_approach) { false }
+
   let(:argv) do
     %w(--output=file.out file.in)
   end
 
   before(:each) do
-    argv.extend OptParse::Arguable
     argv.extend OptBind::Arguable
   end
 
-  it 'has binder' do
+  it 'is arguable by option binder' do
+    expect(subject.included_modules).not_to include(OptionBinder::Arguable)
+  end
+
+  it 'has binder accessor' do
     expect(argv).to respond_to :binder
+    expect(argv).to respond_to :binder=
     expect(argv.binder).to be_an_instance_of OptionBinder
   end
 
-  it 'has parser' do
+  it 'has parser reader' do
     expect(argv).to respond_to :parser
     expect(argv.parser).to be_an_instance_of OptionParser
   end
 
-  it 'has options' do
-    expect(argv).to respond_to :options
-    expect(argv.options).to be_an_instance_of OptionParser
+  it 'has target reader' do
+    expect(argv).to respond_to :target
+    expect(argv.target).to eq TOPLEVEL_BINDING
   end
 
-  let (:already_parsed) { false }
-  let (:destructive_approach) { false }
+  it 'is not arguable by option parser' do
+    expect(argv.singleton_class.included_modules).not_to include(OptionParser::Arguable)
+  end
+
+  it 'has no options accessor' do
+    expect(argv).not_to respond_to :options
+    expect(argv).not_to respond_to :options=
+  end
+  it 'has no parse modes' do
+    expect(argv).not_to respond_to :order
+    expect(argv).not_to respond_to :order!
+    expect(argv).not_to respond_to :permute
+    expect(argv).not_to respond_to :permute!
+  end
+
+  context 'with OptParse::Arguable included before' do
+    before(:each) do
+      argv.extend OptParse::Arguable
+      argv.extend OptBind::Arguable
+    end
+
+    it 'is arguable by option parser' do
+      expect(argv.singleton_class.included_modules).to include(OptionParser::Arguable)
+    end
+
+    it 'has options accessor' do
+      expect(argv).to respond_to :options
+      expect(argv).to respond_to :options=
+      expect(argv.options).to be_an_instance_of OptionParser
+    end
+
+    it 'has unsupported parse modes' do
+      expect(argv).not_to respond_to :order
+      expect(argv).not_to respond_to :permute
+
+      expect(argv).to respond_to :order!
+      expect(argv).to respond_to :permute!
+
+      expect{ argv.order! }.to raise_error RuntimeError, 'unsupported'
+      expect{ argv.permute! }.to raise_error RuntimeError, 'unsupported'
+    end
+  end
 
   shared_examples_for 'define_bound_option_and_argument' do |define|
     it 'defines bound option and argument' do
