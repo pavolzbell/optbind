@@ -13,7 +13,7 @@ describe OptBind::Arguable do
   end
 
   it 'is arguable by option binder' do
-    expect(subject.included_modules).not_to include(OptionBinder::Arguable)
+    expect(subject.included_modules).not_to include OptionBinder::Arguable
   end
 
   it 'has binder accessor' do
@@ -33,7 +33,7 @@ describe OptBind::Arguable do
   end
 
   it 'is not arguable by option parser' do
-    expect(argv.singleton_class.included_modules).not_to include(OptionParser::Arguable)
+    expect(argv.singleton_class.included_modules).not_to include OptionParser::Arguable
   end
 
   it 'has no options accessor' do
@@ -54,7 +54,7 @@ describe OptBind::Arguable do
     end
 
     it 'is arguable by option parser' do
-      expect(argv.singleton_class.included_modules).to include(OptionParser::Arguable)
+      expect(argv.singleton_class.included_modules).to include OptionParser::Arguable
     end
 
     it 'has options accessor' do
@@ -79,8 +79,8 @@ describe OptBind::Arguable do
     it 'defines bound option and argument' do
       define.call argv
       expect(argv.binder).to be_an_instance_of OptionBinder
-      expect(argv.binder.bound_defaults.keys).to contain_exactly(:o, :i)
-      expect(argv.binder.bound_variables.keys).to contain_exactly(:o, :i)
+      expect(argv.binder.bound_defaults.keys).to contain_exactly :o, :i
+      expect(argv.binder.bound_variables.keys).to contain_exactly :o, :i
     end
   end
 
@@ -89,8 +89,8 @@ describe OptBind::Arguable do
       orig = argv.dup
 
       unless already_parsed
-        expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
-        expect(argv.binder.bound_variables).to eq(o: :STDOUT, i: :STDIN)
+        expect(argv.binder.bound_defaults).to eq o: :STDOUT, i: :STDIN
+        expect(argv.binder.bound_variables).to eq o: :STDOUT, i: :STDIN
         expect(argv.binder.assigned_variables).to be_empty
 
         if destructive_approach
@@ -102,9 +102,9 @@ describe OptBind::Arguable do
         end
       end
 
-      expect(argv.binder.bound_defaults).to eq(o: :STDOUT, i: :STDIN)
-      expect(argv.binder.bound_variables).to eq(o: 'file.out', i: 'file.in')
-      expect(argv.binder.assigned_variables).to eq(o: 'file.out', i: 'file.in')
+      expect(argv.binder.bound_defaults).to eq o: :STDOUT, i: :STDIN
+      expect(argv.binder.bound_variables).to eq o: 'file.out', i: 'file.in'
+      expect(argv.binder.assigned_variables).to eq o: 'file.out', i: 'file.in'
 
       if destructive_approach
         expect(argv).to be_empty

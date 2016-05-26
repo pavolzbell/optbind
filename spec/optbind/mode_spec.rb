@@ -31,51 +31,51 @@ describe OptBind do
   describe '#order' do
     it 'parses' do
       orig = argv.dup
-      expect(options.order argv).to contain_exactly('master')
-      expect(options.target).to eq(o: 'file')
+      expect(options.order argv).to contain_exactly 'master'
+      expect(options.target).to eq o: 'file'
       expect(argv).to eq orig
     end
   end
 
   describe '#order!' do
     it 'parses' do
-      expect(options.order! argv).to contain_exactly('master')
-      expect(options.target).to eq(o: 'file')
-      expect(argv).to contain_exactly('master')
+      expect(options.order! argv).to contain_exactly 'master'
+      expect(options.target).to eq o: 'file'
+      expect(argv).to contain_exactly 'master'
     end
   end
 
   describe '#permute' do
     it 'parses' do
       orig = argv.dup
-      expect(options.permute argv).to contain_exactly('master')
-      expect(options.target).to eq(o: 'file')
+      expect(options.permute argv).to contain_exactly 'master'
+      expect(options.target).to eq o: 'file'
       expect(argv).to eq orig
     end
   end
 
   describe '#permute!' do
     it 'parses' do
-      expect(options.permute! argv).to contain_exactly('master')
-      expect(options.target).to eq(o: 'file')
-      expect(argv).to contain_exactly('master')
+      expect(options.permute! argv).to contain_exactly 'master'
+      expect(options.target).to eq o: 'file'
+      expect(argv).to contain_exactly 'master'
     end
   end
 
   describe '#parse' do
     it 'parses' do
       orig = argv.dup
-      expect(options.parse argv).to contain_exactly('master')
-      expect(options.target).to eq(o: 'file')
+      expect(options.parse argv).to contain_exactly 'master'
+      expect(options.target).to eq o: 'file'
       expect(argv).to eq orig
     end
   end
 
   describe '#parse!' do
     it 'parses' do
-      expect(options.parse! argv).to contain_exactly('master')
-      expect(options.target).to eq(o: 'file')
-      expect(argv).to contain_exactly('master')
+      expect(options.parse! argv).to contain_exactly 'master'
+      expect(options.target).to eq o: 'file'
+      expect(argv).to contain_exactly 'master'
     end
   end
 end
@@ -106,51 +106,51 @@ describe OptBind::Arguable do
   describe '#order' do
     it 'parses' do
       orig = argv.dup
-      expect(argv.order).to contain_exactly('master')
-      expect(argv.target).to eq(o: 'file')
+      expect(argv.order).to contain_exactly 'master'
+      expect(argv.target).to eq o: 'file'
       expect(argv).to eq orig
     end
   end
 
   describe '#order!' do
     it 'parses' do
-      expect(argv.order!).to contain_exactly('master')
-      expect(argv.target).to eq(o: 'file')
-      expect(argv).to contain_exactly('master')
+      expect(argv.order!).to contain_exactly 'master'
+      expect(argv.target).to eq o: 'file'
+      expect(argv).to contain_exactly 'master'
     end
   end
 
   describe '#permute' do
     it 'parses' do
       orig = argv.dup
-      expect(argv.permute).to contain_exactly('master')
-      expect(argv.target).to eq(o: 'file')
+      expect(argv.permute).to contain_exactly 'master'
+      expect(argv.target).to eq o: 'file'
       expect(argv).to eq orig
     end
   end
 
   describe '#permute!' do
     it 'parses' do
-      expect(argv.permute!).to contain_exactly('master')
-      expect(argv.target).to eq(o: 'file')
-      expect(argv).to contain_exactly('master')
+      expect(argv.permute!).to contain_exactly 'master'
+      expect(argv.target).to eq o: 'file'
+      expect(argv).to contain_exactly 'master'
     end
   end
 
   describe '#parse' do
     it 'parses' do
       orig = argv.dup
-      expect(argv.parse).to contain_exactly('master')
-      expect(argv.target).to eq(o: 'file')
+      expect(argv.parse).to contain_exactly 'master'
+      expect(argv.target).to eq o: 'file'
       expect(argv).to eq orig
     end
   end
 
   describe '#parse!' do
     it 'parses' do
-      expect(argv.parse!).to contain_exactly('master')
-      expect(argv.target).to eq(o: 'file')
-      expect(argv).to contain_exactly('master')
+      expect(argv.parse!).to contain_exactly 'master'
+      expect(argv.target).to eq o: 'file'
+      expect(argv).to contain_exactly 'master'
     end
   end
 end

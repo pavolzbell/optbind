@@ -30,11 +30,11 @@ describe OptBind::Switch do
 
     context 'with pattern or type' do
       it 'returns pattern' do
-        expect(subject.parser_opts_from_hash pattern: //).to contain_exactly [//], nil
+        expect(subject.parser_opts_from_hash pattern: /.*/).to contain_exactly [/.*/], nil
         expect(subject.parser_opts_from_hash type: Object).to contain_exactly [Object], nil
 
-        expect(subject.parser_opts_from_hash pattern: //, type: Object).to contain_exactly [//], nil
-        expect(subject.parser_opts_from_hash type: Object, pattern: //).to contain_exactly [//], nil
+        expect(subject.parser_opts_from_hash pattern: /.*/, type: Object).to contain_exactly [/.*/], nil
+        expect(subject.parser_opts_from_hash type: Object, pattern: /.*/).to contain_exactly [/.*/], nil
       end
     end
 

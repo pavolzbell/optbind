@@ -396,17 +396,17 @@ usage: meow [<options>]
           options.instance_eval { handle! nil, value, true, variable, nil }
         end
 
-        expect(options.bound_defaults).to eq(o: :STDOUT)
-        expect(options.bound_variables).to eq(o: :STDOUT)
+        expect(options.bound_defaults).to eq o: :STDOUT
+        expect(options.bound_variables).to eq o: :STDOUT
         expect(options.assigned_variables).to be_empty
         write_through options, :o, :STDERR
-        expect(options.bound_defaults).to eq(o: :STDOUT)
-        expect(options.bound_variables).to eq(o: :STDERR)
-        expect(options.assigned_variables).to eq(o: :STDERR)
+        expect(options.bound_defaults).to eq o: :STDOUT
+        expect(options.bound_variables).to eq o: :STDERR
+        expect(options.assigned_variables).to eq o: :STDERR
         writer.call :o, :STDIN
-        expect(options.bound_defaults).to eq(o: :STDOUT)
-        expect(options.bound_variables).to eq(o: :STDIN)
-        expect(options.assigned_variables).to eq(o: :STDERR)
+        expect(options.bound_defaults).to eq o: :STDOUT
+        expect(options.bound_variables).to eq o: :STDIN
+        expect(options.assigned_variables).to eq o: :STDERR
       end
     end
 
@@ -517,14 +517,14 @@ usage: meow [<options>]
         argv = %w(--output=file.out master)
         orig = argv.dup
 
-        expect(options.bound_defaults).to eq(o: :STDOUT)
-        expect(options.bound_variables).to eq(o: :STDOUT)
+        expect(options.bound_defaults).to eq o: :STDOUT
+        expect(options.bound_variables).to eq o: :STDOUT
         expect(options.assigned_variables).to be_empty
-        expect(options.parse argv).to contain_exactly('master')
+        expect(options.parse argv).to contain_exactly 'master'
         expect(argv).to eq orig
-        expect(options.bound_defaults).to eq(o: :STDOUT)
-        expect(options.bound_variables).to eq(o: 'file.out')
-        expect(options.assigned_variables).to eq(o: 'file.out')
+        expect(options.bound_defaults).to eq o: :STDOUT
+        expect(options.bound_variables).to eq o: 'file.out'
+        expect(options.assigned_variables).to eq o: 'file.out'
       end
     end
 
@@ -631,7 +631,7 @@ usage: meow [<options>]
     context 'with present argument' do
       it 'parses' do
         options.parse %w(--output=?)
-        expect(options.target).to eq(o: '?')
+        expect(options.target).to eq o: '?'
       end
     end
 
@@ -663,7 +663,7 @@ usage: meow [<options>]
       context 'with valid argument' do
         it 'parses' do
           options.parse %w(--trim=0)
-          expect(options.target).to eq(t: 0)
+          expect(options.target).to eq t: 0
         end
       end
     end
@@ -679,21 +679,21 @@ usage: meow [<options>]
     context 'with missing argument' do
       it 'parses' do
         options.parse %w(--output)
-        expect(options.target).to eq(o: true)
+        expect(options.target).to eq o: true
       end
     end
 
     context 'with empty argument' do
       it 'parses' do
         options.parse %w(--output=)
-        expect(options.target).to eq(o: '')
+        expect(options.target).to eq o: ''
       end
     end
 
     context 'with present argument' do
       it 'parses' do
         options.parse %w(--output=?)
-        expect(options.target).to eq(o: '?')
+        expect(options.target).to eq o: '?'
       end
     end
 
@@ -707,7 +707,7 @@ usage: meow [<options>]
       context 'with missing argument' do
         it 'parses' do
           options.parse %w(--trim)
-          expect(options.target).to eq(t: nil)
+          expect(options.target).to eq t: nil
         end
       end
 
@@ -726,7 +726,7 @@ usage: meow [<options>]
       context 'with valid argument' do
         it 'parses' do
           options.parse %w(--trim=0)
-          expect(options.target).to eq(t: 0)
+          expect(options.target).to eq t: 0
         end
       end
     end
@@ -766,7 +766,7 @@ usage: meow [<options>]
     context 'with one argument' do
       it 'parses' do
         options.parse %w(?)
-        expect(options.target).to eq(f: '?')
+        expect(options.target).to eq f: '?'
       end
     end
 
@@ -804,7 +804,7 @@ usage: meow [<options>]
       context 'with one valid argument' do
         it 'parses' do
           options.parse %w(0)
-          expect(options.target).to eq(c: 0)
+          expect(options.target).to eq c: 0
         end
       end
 
@@ -844,14 +844,14 @@ usage: meow [<options>]
     context 'with one argument' do
       it 'parses' do
         options.parse %w(?)
-        expect(options.target).to eq(f: %w(?))
+        expect(options.target).to eq f: %w(?)
       end
     end
 
     context 'with many arguments' do
       it 'parses' do
         options.parse %w(? ?)
-        expect(options.target).to eq(f: %w(? ?))
+        expect(options.target).to eq f: %w(? ?)
       end
     end
 
@@ -883,7 +883,7 @@ usage: meow [<options>]
       context 'with one valid argument' do
         it 'parses' do
           options.parse %w(0)
-          expect(options.target).to eq(c: 0)
+          expect(options.target).to eq c: 0
         end
       end
 
@@ -898,7 +898,7 @@ usage: meow [<options>]
           pending 'not implemented yet'
 
           options.parse %w(0 0)
-          expect(options.target).to eq(c: [0, 0])
+          expect(options.target).to eq c: [0, 0]
         end
       end
     end
@@ -928,7 +928,7 @@ usage: meow [<options>]
     context 'with one argument' do
       it 'parses' do
         options.parse %w(?)
-        expect(options.target).to eq(f: '?')
+        expect(options.target).to eq f: '?'
       end
     end
 
@@ -968,7 +968,7 @@ usage: meow [<options>]
       context 'with one valid argument' do
         it 'parses' do
           options.parse %w(0)
-          expect(options.target).to eq(c: 0)
+          expect(options.target).to eq c: 0
         end
       end
 
@@ -1010,14 +1010,14 @@ usage: meow [<options>]
     context 'with one argument' do
       it 'parses' do
         options.parse %w(?)
-        expect(options.target).to eq(f: %w(?))
+        expect(options.target).to eq f: %w(?)
       end
     end
 
     context 'with many arguments' do
       it 'parses' do
         options.parse %w(? ?)
-        expect(options.target).to eq(f: %w(? ?))
+        expect(options.target).to eq f: %w(? ?)
       end
     end
 
@@ -1051,7 +1051,7 @@ usage: meow [<options>]
       context 'with one valid argument' do
         it 'parses' do
           options.parse %w(0)
-          expect(options.target).to eq(c: 0)
+          expect(options.target).to eq c: 0
         end
       end
 
@@ -1061,16 +1061,12 @@ usage: meow [<options>]
         end
       end
 
-      # TODO resolve argument <a:Array> != <a>... => eventually need support for <a:Array>...
-      # TODO also support <x:Array:Integer>
-      # TODO need a support for <x:Integer>... for this to pass
-
       context 'with many valid arguments' do
         it 'parses' do
           pending 'not implemented yet'
 
           options.parse %w(0 0)
-          expect(options.target).to eq(c: [0, 0])
+          expect(options.target).to eq c: [0, 0]
         end
       end
     end
