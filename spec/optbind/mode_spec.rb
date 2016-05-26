@@ -1,10 +1,10 @@
 require 'spec_helper'
 
-require 'optbind/mode'
-
 # TODO test unique behavior of each mode
 
 describe OptBind do
+  before(:each) { require 'optbind/mode' }
+
   let(:options) do
     OptBind.new target: {} do |o|
       o.opt 'o --output=<file>'
@@ -81,6 +81,8 @@ describe OptBind do
 end
 
 describe OptBind::Arguable do
+  before(:each) { require 'optbind/mode' }
+
   let(:argv) do
     argv = %w(--output=file master)
     argv.extend OptBind::Arguable
