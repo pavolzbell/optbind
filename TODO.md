@@ -1,17 +1,12 @@
 # TODOS
 
-  - move order and permute to separate package, required on demand
-  
+  - add optbind/defaults from extise as separate package, required on demand
+
   - `Switch#parser_opts_from_string` - support regexps with options, like `=<name:/[a-z]/i>`
   - `Switch#parser_opts_from_string` - support ranges, like `=<indent:0..8>`
   
-  - add custom type definitions to separate package, required on demand
   - add support for arrays of int -> <x:Array:Integer> and <x:Integer>... 
-  - add support for all OptParse types! -> test
   - add support for ranges on `OptionParser` level
-
-  - add optbind/handlers from extise as separate package, required on demand
-  - add optbind/defaults from extise as separate package, required on demand
 
   - make optional extensions for `OptionParser` monkey-patching `make_switch` to support hash-or-string-exclusive arguments 
 
