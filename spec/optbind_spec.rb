@@ -883,20 +883,18 @@ usage: meow [<options>]
       context 'with one valid argument' do
         it 'parses' do
           options.parse %w(0)
-          expect(options.target).to eq c: 0
+          expect(options.target).to eq c: [0]
         end
       end
 
       context 'with many invalid arguments' do
         it 'raises an error' do
-          expect { options.parse %w(? ?) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
+          expect { options.parse %w(? ?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: ?,?'
         end
       end
 
       context 'with many valid arguments' do
         it 'parses' do
-          pending 'not implemented yet'
-
           options.parse %w(0 0)
           expect(options.target).to eq c: [0, 0]
         end
@@ -1051,20 +1049,18 @@ usage: meow [<options>]
       context 'with one valid argument' do
         it 'parses' do
           options.parse %w(0)
-          expect(options.target).to eq c: 0
+          expect(options.target).to eq c: [0]
         end
       end
 
       context 'with many invalid arguments' do
         it 'raises an error' do
-          expect { options.parse %w(? ?) }.to raise_error OptionBinder::TooManyArguments, 'too many arguments'
+          expect { options.parse %w(? ?) }.to raise_error OptionParser::InvalidArgument, 'invalid argument: ?,?'
         end
       end
 
       context 'with many valid arguments' do
         it 'parses' do
-          pending 'not implemented yet'
-
           options.parse %w(0 0)
           expect(options.target).to eq c: [0, 0]
         end

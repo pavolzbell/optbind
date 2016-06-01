@@ -3,7 +3,9 @@ require 'spec_helper'
 # TODO test unique behavior of each mode
 
 describe OptBind do
-  before(:each) { require 'optbind/mode' }
+  before(:each) do
+    require 'optbind/mode'
+  end
 
   let(:options) do
     OptBind.new target: {} do |o|

@@ -56,7 +56,9 @@ describe OptBind::Switch do
 end
 
 describe OptBind do
-  before(:each) { require 'optbind/type' }
+  before(:each) do
+    require 'optbind/type'
+  end
 
   shared_examples_for 'parse_blank' do
     include_examples 'parse_value', nil => nil, description: 'parses missing argument as nil'

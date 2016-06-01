@@ -28,6 +28,12 @@ describe OptBind::Switch do
       end
     end
 
+    context 'with multiple' do
+      it 'returns multiple' do
+        expect(subject.parser_opts_from_hash multiple: true).to contain_exactly [:MULTIPLE], nil
+      end
+    end
+
     context 'with pattern or type' do
       it 'returns pattern' do
         expect(subject.parser_opts_from_hash pattern: /.*/).to contain_exactly [/.*/], nil
@@ -128,12 +134,26 @@ describe OptBind::Switch do
           expect(subject.parser_opts_from_hash argument: '<path>').to contain_exactly %w(=<path>), nil
           expect(subject.parser_opts_from_hash argument: '=<path>').to contain_exactly %w(=<path>), nil
         end
+
+        context 'with variable length' do
+          it 'returns argument' do
+            expect(subject.parser_opts_from_hash argument: '<path>', multiple: true).to contain_exactly [:MULTIPLE, '=<path>'], nil
+            expect(subject.parser_opts_from_hash argument: '=<path>', multiple: true).to contain_exactly [:MULTIPLE, '=<path>'], nil
+          end
+        end
       end
 
       context 'when optional' do
         it 'returns argument' do
           expect(subject.parser_opts_from_hash argument: '[<path>]').to contain_exactly %w(=[<path>]), nil
           expect(subject.parser_opts_from_hash argument: '[=<path>]').to contain_exactly %w(=[<path>]), nil
+        end
+
+        context 'with variable length' do
+          it 'returns argument' do
+            expect(subject.parser_opts_from_hash argument: '[<path>]', multiple: true).to contain_exactly [:MULTIPLE, '=[<path>]'], nil
+            expect(subject.parser_opts_from_hash argument: '[=<path>]', multiple: true).to contain_exactly [:MULTIPLE, '=[<path>]'], nil
+          end
         end
 
         context 'with legacy syntax' do
