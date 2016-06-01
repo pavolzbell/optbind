@@ -241,12 +241,26 @@ describe OptBind::Switch do
             expect(subject.parser_opts_from_string '<path>').to contain_exactly [:REQUIRED, '=<path>'], nil
             expect(subject.parser_opts_from_string '=<path>').to contain_exactly [:REQUIRED, '=<path>'], nil
           end
+
+          context 'with variable length' do
+            it 'returns argument' do
+              expect(subject.parser_opts_from_string '<path>...').to contain_exactly [:REQUIRED, :MULTIPLE, '=<path>...'], nil
+              expect(subject.parser_opts_from_string '=<path>...').to contain_exactly [:REQUIRED, :MULTIPLE, '=<path>...'], nil
+            end
+          end
         end
 
         context 'when optional' do
           it 'returns argument' do
             expect(subject.parser_opts_from_string '[<path>]').to contain_exactly [:OPTIONAL, '=[<path>]'], nil
             expect(subject.parser_opts_from_string '[=<path>]').to contain_exactly [:OPTIONAL, '=[<path>]'], nil
+          end
+
+          context 'with variable length' do
+            it 'returns argument' do
+              expect(subject.parser_opts_from_string '[<path>...]').to contain_exactly [:OPTIONAL, :MULTIPLE, '=[<path>...]'], nil
+              expect(subject.parser_opts_from_string '[=<path>...]').to contain_exactly [:OPTIONAL, :MULTIPLE, '=[<path>...]'], nil
+            end
           end
 
           context 'with legacy syntax' do
@@ -263,12 +277,26 @@ describe OptBind::Switch do
             expect(subject.parser_opts_from_string '<value:Numeric>').to contain_exactly [:REQUIRED, Numeric, '=<value>'], nil
             expect(subject.parser_opts_from_string '=<value:Numeric>').to contain_exactly [:REQUIRED, Numeric, '=<value>'], nil
           end
+
+          context 'with variable length' do
+            it 'returns argument and type' do
+              expect(subject.parser_opts_from_string '<value:Numeric>...').to contain_exactly [:REQUIRED, :MULTIPLE, Numeric, '=<value>...'], nil
+              expect(subject.parser_opts_from_string '=<value:Numeric>...').to contain_exactly [:REQUIRED, :MULTIPLE, Numeric, '=<value>...'], nil
+            end
+          end
         end
 
         context 'when optional' do
           it 'returns argument and type' do
             expect(subject.parser_opts_from_string '[<value:Numeric>]').to contain_exactly [:OPTIONAL, Numeric, '=[<value>]'], nil
             expect(subject.parser_opts_from_string '[=<value:Numeric>]').to contain_exactly [:OPTIONAL, Numeric, '=[<value>]'], nil
+          end
+
+          context 'when variable length' do
+            it 'returns argument and type' do
+              expect(subject.parser_opts_from_string '[<value:Numeric>...]').to contain_exactly [:OPTIONAL, :MULTIPLE, Numeric, '=[<value>...]'], nil
+              expect(subject.parser_opts_from_string '[=<value:Numeric>...]').to contain_exactly [:OPTIONAL, :MULTIPLE, Numeric, '=[<value>...]'], nil
+            end
           end
 
           context 'with legacy syntax' do
@@ -282,20 +310,34 @@ describe OptBind::Switch do
       context 'with name and regexp' do
         context 'when required' do
           it 'returns argument and regexp' do
-            expect(subject.parser_opts_from_string '<indent:\d+>').to contain_exactly [:REQUIRED, /\d+/, '=<indent>'], nil
-            expect(subject.parser_opts_from_string '=<indent:\d+>').to contain_exactly [:REQUIRED, /\d+/, '=<indent>'], nil
+            expect(subject.parser_opts_from_string '<value:\d+>').to contain_exactly [:REQUIRED, /\d+/, '=<value>'], nil
+            expect(subject.parser_opts_from_string '=<value:\d+>').to contain_exactly [:REQUIRED, /\d+/, '=<value>'], nil
+          end
+
+          context 'with variable length' do
+            it 'returns argument and regexp' do
+              expect(subject.parser_opts_from_string '<value:\d+>...').to contain_exactly [:REQUIRED, :MULTIPLE, /\d+/, '=<value>...'], nil
+              expect(subject.parser_opts_from_string '=<value:\d+>...').to contain_exactly [:REQUIRED, :MULTIPLE, /\d+/, '=<value>...'], nil
+            end
           end
         end
 
         context 'when optional' do
           it 'returns argument and regexp' do
-            expect(subject.parser_opts_from_string '[<indent:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<indent>]'], nil
-            expect(subject.parser_opts_from_string '[=<indent:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<indent>]'], nil
+            expect(subject.parser_opts_from_string '[<value:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<value>]'], nil
+            expect(subject.parser_opts_from_string '[=<value:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<value>]'], nil
+          end
+
+          context 'with variable length' do
+            it 'returns argument and regexp' do
+              expect(subject.parser_opts_from_string '[<value:\d+>...]').to contain_exactly [:OPTIONAL, :MULTIPLE, /\d+/, '=[<value>...]'], nil
+              expect(subject.parser_opts_from_string '[=<value:\d+>...]').to contain_exactly [:OPTIONAL, :MULTIPLE, /\d+/, '=[<value>...]'], nil
+            end
           end
 
           context 'with legacy syntax' do
             it 'returns argument and regexp' do
-              expect(subject.parser_opts_from_string '=[<indent:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<indent>]'], nil
+              expect(subject.parser_opts_from_string '=[<value:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<value>]'], nil
             end
           end
         end
