@@ -77,10 +77,11 @@ class OptionBinder
 
   def option(*opts, &handler)
     opts, handler, bound, variable, default = *several_variants(*opts, &handler)
+    o, h = *loot!(opts, &handler)
 
-    @parser.on(*opts) do |r|
+    @parser.on(*o) do |r|
       raise OptionParser::InvalidArgument if opts.include?(:REQUIRED) && (r.nil? || r.respond_to?(:empty?) && r.empty?)
-      handle! handler, r, bound, variable, default
+      handle! h, r, bound, variable, default
     end
 
     (@option_definitions ||= []) << { opts: opts, handler: handler, bound: bound, variable: variable }
@@ -92,10 +93,11 @@ class OptionBinder
 
   def argument(*opts, &handler)
     opts, handler, bound, variable, default = *several_variants(*opts, &handler)
+    o, h = *loot!(opts, &handler)
 
-    (@argument_parser ||= OptionParser.new).on(*(opts << "--#{(@argument_definitions || []).size}")) do |r|
+    (@argument_parser ||= OptionParser.new).on(*(o + ["--#{(@argument_definitions || []).size}"])) do |r|
       raise OptionParser::InvalidArgument if opts.include?(:REQUIRED) && (r.nil? || r.respond_to?(:empty?) && r.empty?)
-      handle! handler, r, bound, variable, default
+      handle! h, r, bound, variable, default
     end
 
     (@argument_definitions ||= []) << { opts: opts, handler: handler, bound: bound, variable: variable }
@@ -136,11 +138,8 @@ class OptionBinder
 
   module Switch
     def self.parser_opts_from_hash(hash = {}, &handler)
-      style = case (hash[:style] || hash[:mode]).to_s.downcase
-      when 'required' then :REQUIRED
-      when 'optional' then :OPTIONAL
-      end
-
+      p = (hash[:style] || hash[:mode]).to_s.upcase
+      style = [(p.to_sym if %w(REQUIRED OPTIONAL).include? p), (:MULTIPLE if hash[:multiple])]
       pattern = hash[:pattern] || hash[:type]
       values = hash[:values]
       names = [hash[:long], hash[:longs]].flatten.map { |n| n.to_s.sub(/\A-{,2}/, '--') if n }
@@ -155,7 +154,7 @@ class OptionBinder
       argument = (hash[:argument].to_s.sub(/\A(\[)?=?/, '=\1') if hash[:argument])
       description = ([hash[:description]].flatten * ' ' if hash[:description])
       handler ||= hash[:handler]
-      return ([style, pattern, values] + names + [argument, description]).compact, handler
+      return (style + [pattern, values] + names + [argument, description]).compact, handler
     end
 
     def self.parser_opts_from_string(string = '', &handler)
@@ -165,27 +164,26 @@ class OptionBinder
         shorts << $~[:short]
       end
 
-      style, pattern, values, argument = nil
+      style, pattern, values, argument = [], nil
 
       while string.sub!(/\A(?:(?<long>--[\[\]\-\w]+[\]\w]+)?(?:(?<argument>(?:\[?=?|=\[)[<(]\S+[)>]\.{,3}\]?)|\s+))/, '')
         longs << $~[:long] if $~[:long]
         next unless $~[:argument]
         argument = $~[:argument]
-        style = argument =~ /\A=?[<(]/ ? :REQUIRED : :OPTIONAL
-        pattern = Array if argument =~ /\.{3}\]?\z/
+        style = [argument =~ /\A=?[<(]/ ? :REQUIRED : :OPTIONAL, argument =~ /\.{3}\]?\z/ ? :MULTIPLE : nil]
         values = $~[:values].split('|') if argument =~ /(?:\[?=?|=\[)\((?<values>\S*)\)\]?/
 
         if values.nil? && argument =~ /(?:\[?=?|=\[)<(?<name>\S+):(?<pattern>\S+)>\]?/
-          pattern = Module.const_get($~[:pattern]) rescue Regexp.new($~[:pattern])
-          argument = "=<#{$~[:name]}>"
-          argument = "=[#{argument[1..-1]}]" if style == :OPTIONAL
+          pattern = OptionBinder.const_get($~[:pattern]) rescue Regexp.new($~[:pattern])
+          argument = "=<#{$~[:name]}>#{'...' if style.include? :MULTIPLE}"
+          argument = "=[#{argument[1..-1]}]" if style.include? :OPTIONAL
         else
-          argument.sub!(/\A(?:=\[|\[?=?)/, style == :OPTIONAL ? '=[' : '=')
+          argument.sub!(/\A(?:=\[|\[?=?)/, style.include?(:OPTIONAL) ? '=[' : '=')
         end
       end
 
       description = !string.empty? ? string.strip : nil
-      return ([style, pattern, values] + shorts + longs + [argument, description]).compact, handler
+      return (style + [pattern, values] + shorts + longs + [argument, description]).compact, handler
     end
   end
 
@@ -227,7 +225,7 @@ class OptionBinder
 
   def parse_args!(argv)
     return argv unless @argument_parser
-    k = @argument_definitions.find_index { |a| a[:opts].include? Array }
+    k = @argument_definitions.find_index { |a| a[:opts].include? :MULTIPLE }
     p = k ? argv[0...k].map { |r| [r] } << argv[k..-1] : argv.map { |r| [r] }
     p = (p.empty? ? p << [] : p).each_with_index.map do |r, i|
       a = @argument_definitions[i]
@@ -244,6 +242,16 @@ class OptionBinder
 
   private :parse_args!
 
+  def loot!(opts, &handler)
+    return opts, handler unless opts.include? :MULTIPLE
+    o = opts.dup
+    t = o.delete o.find { |a| a != Array && a.is_a?(Module) }
+    o << Array unless o.include? Array
+    return o, handler unless t
+    require 'optbind/handler'
+    return o, -> (a) { (handler || -> (r) { r }).call listed_as(t).call a }
+  end
+
   def handle!(handler, raw, bound, variable, default)
     (handler || -> (r) { r }).call(raw == nil ? default : raw).tap do |x|
       return x unless bound
@@ -252,12 +260,11 @@ class OptionBinder
     end
   end
 
-  private :handle!
+  private :loot!, :handle!
 
   module Arguable
     def self.extend_object(o)
-      super
-      return unless o.singleton_class.included_modules.include? OptionParser::Arguable
+      super and return unless o.singleton_class.included_modules.include? OptionParser::Arguable
       %i(order! permute!).each { |m| o.define_singleton_method(m) { raise 'unsupported' }}
     end
 
