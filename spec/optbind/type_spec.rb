@@ -13,7 +13,7 @@ describe OptBind::Switch do
 
   shared_examples_for 'resolve_type' do |name|
     it "resolves #{name}" do
-      type = OptBind.const_get name
+      type = OptBind.const_get name.to_s.gsub(/(?:\A|[-_]+)\w/) { |p| p[-1].upcase }
       expect(subject.parser_opts_from_string "<value:#{name}>").to contain_exactly [:REQUIRED, type, '=<value>'], nil
     end
   end
@@ -50,6 +50,13 @@ describe OptBind::Switch do
         include_examples 'resolve_type', :ShellWords
 
         include_examples 'resolve_type', :URI
+
+        context 'with alternative syntax' do
+          include_examples 'resolve_type', :array
+          include_examples 'resolve_type', :true_class
+          include_examples 'resolve_type', :decimal_numeric
+          include_examples 'resolve_type', :shell_words
+        end
       end
     end
   end

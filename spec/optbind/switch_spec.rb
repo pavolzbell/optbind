@@ -156,7 +156,7 @@ describe OptBind::Switch do
           end
         end
 
-        context 'with legacy syntax' do
+        context 'with alternative syntax' do
           it 'returns argument' do
             expect(subject.parser_opts_from_hash argument: '=[<path>]').to contain_exactly %w(=[<path>]), nil
           end
@@ -283,7 +283,7 @@ describe OptBind::Switch do
             end
           end
 
-          context 'with legacy syntax' do
+          context 'with alternative syntax' do
             it 'returns argument' do
               expect(subject.parser_opts_from_string '=[<path>]').to contain_exactly [:OPTIONAL, '=[<path>]'], nil
             end
@@ -319,7 +319,7 @@ describe OptBind::Switch do
             end
           end
 
-          context 'with legacy syntax' do
+          context 'with alternative syntax' do
             it 'returns argument and type' do
               expect(subject.parser_opts_from_string '=[<value:Numeric>]').to contain_exactly [:OPTIONAL, Numeric, '=[<value>]'], nil
             end
@@ -355,7 +355,7 @@ describe OptBind::Switch do
             end
           end
 
-          context 'with legacy syntax' do
+          context 'with alternative syntax' do
             it 'returns argument and regexp' do
               expect(subject.parser_opts_from_string '=[<value:\d+>]').to contain_exactly [:OPTIONAL, /\d+/, '=[<value>]'], nil
             end
@@ -377,7 +377,7 @@ describe OptBind::Switch do
             expect(subject.parser_opts_from_string '[=(on|off)]').to contain_exactly [:OPTIONAL, %w(on off), '=[(on|off)]'], nil
           end
 
-          context 'with legacy syntax' do
+          context 'with alternative syntax' do
             it 'returns argument and values' do
               expect(subject.parser_opts_from_string '=[(on|off)]').to contain_exactly [:OPTIONAL, %w(on off), '=[(on|off)]'], nil
             end

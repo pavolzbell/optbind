@@ -174,9 +174,10 @@ class OptionBinder
         values = $~[:values].split('|') if argument =~ /(?:\[?=?|=\[)\((?<values>\S*)\)\]?/
 
         if values.nil? && argument =~ /(?:\[?=?|=\[)<(?<name>\S+):(?<pattern>\S+)>\]?/
-          pattern = OptionBinder.const_get($~[:pattern]) rescue Regexp.new($~[:pattern])
-          argument = "=<#{$~[:name]}>#{'...' if style.include? :MULTIPLE}"
+          argument, pattern = "=<#{$~[:name]}>#{'...' if style.include? :MULTIPLE}", $~[:pattern]
           argument = "=[#{argument[1..-1]}]" if style.include? :OPTIONAL
+          pattern = pattern.gsub(/\//, '::').gsub(/(?:\A|[-_]+)\w/) { |p| p[-1].upcase } if pattern =~ /\A[-_a-z]/
+          pattern = OptionBinder.const_get(pattern) rescue Regexp.new(pattern)
         else
           argument.sub!(/\A(?:=\[|\[?=?)/, style.include?(:OPTIONAL) ? '=[' : '=')
         end
