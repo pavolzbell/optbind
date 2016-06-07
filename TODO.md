@@ -1,12 +1,13 @@
 # TODOS
 
+  - test against special cases for multiple args like 'a <ids...>' with '--x 1'
   - add optbind/defaults from extise as separate package, required on demand
+
+  - add support for arrays of int -> <x:Array:Integer> and <x:Integer>... 
+  - add support for ranges on `OptionParser` level
 
   - `Switch#parser_opts_from_string` - support regexps with options, like `=<name:/[a-z]/i>`
   - `Switch#parser_opts_from_string` - support ranges, like `=<indent:0..8>`
-  
-  - add support for arrays of int -> <x:Array:Integer> and <x:Integer>... 
-  - add support for ranges on `OptionParser` level
 
   - make optional extensions for `OptionParser` monkey-patching `make_switch` to support hash-or-string-exclusive arguments 
 
