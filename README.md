@@ -3,12 +3,12 @@
 [![Build Status](https://img.shields.io/travis/pavolzbell/optbind.svg)](https://travis-ci.org/pavolzbell/optbind)
 [![Gem Version](https://img.shields.io/gem/v/optbind.svg)](https://rubygems.org/gems/optbind)
 
-Binds command-line options to variables.
+Binds command-line options to objects or variables.
 
 Extends command-line option analysis by wrapping an instance of standard [`OptionParser`](http://ruby-doc.org/stdlib-2.3.1/libdoc/optparse/rdoc/OptionParser.html).
-Enables binding of options and arguments to instance or local variables. Provides `Hash` and `String` only interfaces
-to define command line options, unlike a mixed interface by standard library. Supports access to default values and
-partial argument analysis. Builds Git-like options and help by default. 
+Enables binding of options and arguments to `Hash` entries, public accessors, local, instance, or class variables. Provides `Hash` and `String` only interfaces
+to define command-line options, unlike a mixed interface by standard library. Supports access to default values and argument analysis. Builds Git-like options
+and help by default. 
 
 ## Installation
 
@@ -62,11 +62,47 @@ Note that plain `OptionBinder.new` binds to local variables of top level binding
 
 See specs for more examples and details on usage.
 
+### Definitions
+
+Option and argument definitions include:
+
+#### Hash options
+
+```ruby
+e, t, v, b, m = false, 80, true, 'master', [STDIN]
+
+OptionBinder.new do |b|
+  b.usage %w([<options>] <branch> [<path>...])
+  b.usage %w([<options>] -e <branch> [<command>...])
+  b.option variable: :e, names: %w(e eval)
+  b.option variable: :t, mode: :OPTIONAL, short: 't', long: 'trim', argument: '[=<length>]', type: Integer
+  b.option variable: :v, names: %w(-v --[no]-verbose), description: 'Be more verbose.'
+  b.argument variable: :b, mode: :REQUIRED, argument: '<branch>'
+  b.argument variable: :a, mode: :OPTIONAL, multiple: true, argument: '[<mix>...]'
+end
+```
+
+#### Plain strings
+
+```ruby
+e, t, v, b, m = false, 80, true, 'master', [STDIN]
+
+OptionBinder.new do |b|
+  b.usage '[<options>] <branch> [<path>...]'
+  b.usage '[<options>] -e <branch> [<command>...]'
+  b.option 'e -e --eval'
+  b.option 't -t --trim[=<length:integer>]'
+  b.option 'v -v --[no-]verbose Be more verbose.'
+  b.argument 'b <branch>'
+  b.argument 'm [<mix>...]'
+end
+```
+
 ### Bindings
 
 Various binding possibilities include:   
 
-#### Bind to `Hash` object
+#### Bind to `Hash` entries
 
 Create target:
 
@@ -77,7 +113,7 @@ options = { input: STDIN, output: STDOUT }
 Use `OptionBinder` directly:
 
 ```ruby
-OptionBinder.new(target: options) do
+OptionBinder.new(target: options) do |b|
   # ...
 end
 ```
@@ -107,7 +143,7 @@ end
 Use `OptionBinder` directly:
 
 ```ruby
-OptionBinder.new(target: options) do
+OptionBinder.new(target: options) do |b|
   # ...
 end
 ```
@@ -135,7 +171,7 @@ options = Options.new
 Use `OptionBinder` directly:
 
 ```ruby
-OptionBinder.new(target: options, bind: :to_class_variables) do
+OptionBinder.new(target: options, bind: :to_class_variables) do |b|
   # ...
 end
 ```
@@ -165,7 +201,7 @@ options = Options.new
 Use `OptionBinder` directly:
 
 ```ruby
-OptionBinder.new(target: options, bind: :to_instance_variables) do
+OptionBinder.new(target: options, bind: :to_instance_variables) do |b|
   # ...
 end
 ```
@@ -189,7 +225,7 @@ input, output = STDIN, STDOUT
 Use `OptionBinder` directly:
 
 ```ruby
-OptionBinder.new(target: TOPLEVEL_BINDING, bind: :to_local_variables) do
+OptionBinder.new(target: TOPLEVEL_BINDING, bind: :to_local_variables) do |b|
   # ...
 end
 ```
@@ -197,7 +233,7 @@ end
 Use `OptionBinder` directly with top level binding object as target by default:
 
 ```ruby
-OptionBinder.new do
+OptionBinder.new do |b|
   # ...
 end
 ```
@@ -216,6 +252,48 @@ Use `ARGV` shortcut with top level binding object as target by default:
 ARGV.define_and_bind(to: :locals) do
   # ... 
 end  
+```
+
+### Extensions
+
+Several available extensions include: 
+
+#### Mode
+
+Adds `order` and `permute` methods.
+
+```ruby
+require 'optbind/mode'
+
+ARGV.order
+```
+
+Note that `order!` and `permute!` methods in `ARGV` from `OptionParser` are redefined to raise an unsupported error without this extension.
+
+#### Type
+
+Adds various common types to accept in definitions.
+
+```ruby
+require 'optbind/type'
+
+...
+
+binder.option 'm --matcher=<pattern:Regexp>'
+binder.option 'r --repository=<uri:URI>'
+```
+
+#### Handler
+
+Adds various common handlers to accept in definitions.
+
+```ruby
+require 'optbind/handler'
+
+... 
+
+binder.option 's --storage=<name>', &included_in(%w(file memory))
+binder.option 'a --attachments=<ids>', &listed_as(Integer)
 ```
 
 ## Testing
