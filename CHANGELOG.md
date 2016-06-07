@@ -1,3 +1,17 @@
+## 0.5.0
+
+*   Support parsing of options with typed array value and multiple typed arguments  
+
+*   Support underscore pattern syntax in string definitions
+
+*   Make parsing methods backwards compatible with `OptionParser` again
+ 
+*   Add extensions for parsing mode, known types, and custom handlers 
+
+*   Add a lot of new test cases, minor bug fixes, and enhancements
+
+    *Pavol Zbell*
+
 ## 0.4.0
 
 *   Support binding options to class variables
