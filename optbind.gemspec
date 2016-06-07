@@ -6,8 +6,8 @@ Gem::Specification.new do |s|
   s.authors       = ['Pavol Zbell']
   s.email         = ['pavol.zbell@gmail.com']
 
-  s.summary       = 'Binds command-line options to variables.'
-  s.description   = 'Binds command-line options to variables. Supports binding of options and arguments, default values, and partial argument analysis.'
+  s.summary       = 'Binds command-line options to objects or variables.'
+  s.description   = 'Binds command-line options to objects or variables. Supports binding of options and arguments, default values, and argument analysis.'
   s.homepage      = 'https://github.com/pavolzbell/optbind'
   s.license       = 'MIT'
 
