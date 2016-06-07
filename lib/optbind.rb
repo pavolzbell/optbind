@@ -61,7 +61,7 @@ class OptionBinder
   def_delegator :@parser, :help
 
   def usage(*args)
-    line = (args * ' ') << "\n"
+    line = (args.flatten * ' ') << "\n"
 
     if @parser.banner =~ /\Ausage:.+\n\n/i
       @parser.banner = "usage: #{program} #{line}"
