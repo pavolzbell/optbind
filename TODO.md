@@ -1,8 +1,6 @@
 # TODOS
 
-  - make a way to include all exts at once like require 'optbind/all'
   - test against special cases for multiple args like 'a <ids...>' with '--x 1'
-  - add optbind/defaults from extise as separate package, required on demand
 
   - add support for arrays of int -> <x:Array:Integer> and <x:Integer>... 
   - add support for ranges on `OptionParser` level
