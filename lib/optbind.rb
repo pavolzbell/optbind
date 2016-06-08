@@ -248,7 +248,7 @@ class OptionBinder
     o = opts.dup
     t = o.delete o.find { |a| a != Array && a.is_a?(Module) }
     o << Array unless o.include? Array
-    return o, handler unless t
+    return o, handler if t == nil || t == String
     require 'optbind/handler'
     return o, -> (a) { (handler || -> (r) { r }).call listed_as(t).call a }
   end
