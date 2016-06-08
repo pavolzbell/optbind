@@ -1,3 +1,11 @@
+## 0.5.1
+
+*   Add extension for automatic defaults description
+
+*   Add missing required dependencies
+
+    *Pavol Zbell*
+
 ## 0.5.0
 
 *   Support parsing of options with typed array value and multiple typed arguments  
