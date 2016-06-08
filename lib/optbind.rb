@@ -61,7 +61,7 @@ class OptionBinder
   def_delegator :@parser, :help
 
   def usage(*args)
-    line = (args.flatten * ' ') << "\n"
+    line = (args * ' ') << "\n"
 
     if @parser.banner =~ /\Ausage:.+\n\n/i
       @parser.banner = "usage: #{program} #{line}"
@@ -152,7 +152,7 @@ class OptionBinder
       end
 
       argument = (hash[:argument].to_s.sub(/\A(\[)?=?/, '=\1') if hash[:argument])
-      description = ([hash[:description]].flatten * ' ' if hash[:description])
+      description = ([hash[:description]] * ' ' if hash[:description])
       handler ||= hash[:handler]
       return (style + [pattern, values] + names + [argument, description]).compact, handler
     end
