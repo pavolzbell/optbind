@@ -256,7 +256,7 @@ end
 
 ### Extensions
 
-Use `optbind/ext` shortcut to load option binder with all available extensions at once:
+Use `optbind/ext` shortcut to load option binder with all extensions at once:
 
 ```ruby
 require 'optbind/ext'
