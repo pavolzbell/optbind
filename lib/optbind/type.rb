@@ -1,4 +1,5 @@
 require 'forwardable'
+require 'optbind'
 
 require 'optparse/date'
 require 'optparse/shellwords'

@@ -1,3 +1,5 @@
+require 'optbind'
+
 module OptionBinder::Handler
   def matched_by(p)
     -> (v) { p =~ v.to_s ? v : raise(OptionParser::InvalidArgument, v) if v }
