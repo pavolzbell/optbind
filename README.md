@@ -258,6 +258,18 @@ end
 
 Several available extensions include: 
 
+#### Default
+
+Adds default values to option descriptions.
+
+```ruby
+require 'optbind/default'
+
+# ...
+
+print binder.help
+```
+
 #### Mode
 
 Adds `order` and `permute` methods.
@@ -265,7 +277,9 @@ Adds `order` and `permute` methods.
 ```ruby
 require 'optbind/mode'
 
-ARGV.order
+# ...
+
+binder.order ARGV
 ```
 
 Note that `order!` and `permute!` methods in `ARGV` from `OptionParser` are redefined to raise an unsupported error without this extension.
@@ -277,7 +291,7 @@ Adds various common types to accept in definitions.
 ```ruby
 require 'optbind/type'
 
-...
+# ...
 
 binder.option 'm --matcher=<pattern:Regexp>'
 binder.option 'r --repository=<uri:URI>'
@@ -290,7 +304,7 @@ Adds various common handlers to accept in definitions.
 ```ruby
 require 'optbind/handler'
 
-... 
+# ... 
 
 binder.option 's --storage=<name>', &included_in(%w(file memory))
 binder.option 'a --attachments=<ids>', &listed_as(Integer)
