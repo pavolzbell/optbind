@@ -78,7 +78,7 @@ OptionBinder.new do |b|
   b.option variable: :t, mode: :OPTIONAL, short: 't', long: 'trim', argument: '[=<length>]', type: Integer
   b.option variable: :v, names: %w(-v --[no]-verbose), description: 'Be more verbose.'
   b.argument variable: :b, mode: :REQUIRED, argument: '<branch>'
-  b.argument variable: :a, mode: :OPTIONAL, multiple: true, argument: '[<mix>...]'
+  b.argument variable: :m, mode: :OPTIONAL, multiple: true, argument: '[<mix>...]'
 end
 ```
 
