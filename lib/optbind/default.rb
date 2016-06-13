@@ -15,5 +15,5 @@ class OptionBinder
     return opts, handler, bound, variable, default
   end
 
-  private :several_variants
+  private :several_variants_without_default_description, :several_variants
 end
